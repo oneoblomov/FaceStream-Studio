@@ -1,8 +1,5 @@
 import cv2
 import numpy as np
-import os
-import pickle
-import time
 import mediapipe as mp
 from ultralytics import YOLO
 import face_recognition
