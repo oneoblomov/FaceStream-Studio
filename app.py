@@ -8,7 +8,7 @@ import uuid
 
 def init_session():
     st.session_state.setdefault('camera_running', False)
-    st.session_state.setdefault('model_path', "yolov11l-face.pt")
+    st.session_state.setdefault('model_path', "src/yolov11l-face.pt")
     st.session_state.setdefault('face_match_threshold', 0.6)
     st.session_state.setdefault('max_faces', 5)
     st.session_state.setdefault('frame_skip', 2)
@@ -150,7 +150,7 @@ def video_interface():
         uploaded_file = st.file_uploader("Video seçin", type=["mp4", "avi", "mov", "mkv"])
 
         if uploaded_file:
-            video_key = f"video_analysis_{uploaded_file.id}"
+            video_key = f"video_analysis_{uploaded_file.file_id=}"
             st.session_state.setdefault(video_key, {'running': False, 'path': None})
 
             if st.button("Analiz Başlat", key=f"start_{video_key}"):
@@ -214,7 +214,7 @@ def main():
         index=0
     )
 
-    with st.sidebar.expander("⚙️ Ayarlar ve Yüz Yönetimi"):
+    with st.sidebar.expander("⚙️ Ayarlar ve Yüz Yönetimi", expanded=True):
         settings_interface()
 
     if mode == "Kamera":
