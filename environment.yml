@@ -1,0 +1,10 @@
+channels:
+     - conda-forge
+ dependencies:
+     - dlib
+     - numpy
+     - face_recognition
+     - mediapipe
+     - opencv-python
+     - Pillow
+     - ultralytics

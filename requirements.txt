@@ -1,7 +1,0 @@
-streamlit
-opencv-python
-mediapipe
-ultralytics
-face_recognition
-numpy
-Pillow
