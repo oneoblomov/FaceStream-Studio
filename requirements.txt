@@ -1,0 +1,7 @@
+streamlit
+opencv-python-headless
+ultralytics
+mediapipe
+numpy
+Pillow
+cmake
