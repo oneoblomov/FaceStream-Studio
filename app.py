@@ -7,6 +7,7 @@ import io
 import uuid
 from PIL import Image
 
+unKnownFaces= 'Tanınmayan Yüzler'
 def init_session():
     st.session_state.setdefault('camera_running', False)
     st.session_state.setdefault('model_path')
@@ -138,7 +139,7 @@ def display_unknown_face_item(face_id, face_data):
         with col1:
             st.image(img, width=80)
         with col2:
-            new_name = st.text_input(f"İsim", key=f"unknown_{face_id}")
+            new_name = st.text_input("İsim", key=f"unknown_{face_id}")
             if st.button("Ekle", key=f"add_{face_id}") and new_name:
                 st.session_state.temp_faces[new_name.strip()] = face_data
                 del st.session_state.unknown_faces[face_id]
@@ -152,7 +153,7 @@ def display_unknown_face_item(face_id, face_data):
         st.error(f"Görüntü yükleme hatası: {e}")
 
 def unknown_faces_panel():
-    with st.sidebar.expander("Tanınmayan Yüzler", expanded=True):
+    with st.sidebar.expander(unKnownFaces, expanded=True):
         if not st.session_state.unknown_faces:
             st.info("Tanınmayan yüz bulunamadı.")
             return
@@ -169,7 +170,7 @@ def camera_interface():
         process_camera_stream()
     
     with col2:
-        st.subheader("Tanınmayan Yüzler")
+        st.subheader(unKnownFaces)
         display_unknown_faces()
 
 def toggle_camera_button():
@@ -196,7 +197,7 @@ def video_interface():
             process_uploaded_video(uploaded_file)
     
     with col2:
-        st.subheader("Tanınmayan Yüzler")
+        st.subheader(unKnownFaces)
         display_unknown_faces()
 
 def process_uploaded_video(uploaded_file):

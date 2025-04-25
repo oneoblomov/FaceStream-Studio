@@ -190,7 +190,6 @@ class FaceAnalyzer:
     def _analyze_emotion(self, landmarks):
         lm_coords = landmarks.landmark
         
-        face_width = abs(lm_coords[454].x - lm_coords[234].x)
         face_height = abs(lm_coords[152].y - lm_coords[10].y)
         
         lip_dist = self._calculate_lip_distance(lm_coords, face_height)
