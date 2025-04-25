@@ -22,7 +22,8 @@ class FaceAnalyzer:
         self.FACE_MATCH_THRESHOLD = 0.6
         
         self.lip_indices = list(range(61, 69)) + list(range(291, 299))
-        self.eyebrow_indices = {'left': [70, 63, 105], 'right': [336, 296, 334]}
+        self.eyebrow_indices = {'left': [70, 63, 105, 66, 107], 'right': [336, 296, 334, 300, 293]}  
+        self.eye_indices = {'left': [33, 160, 158, 133], 'right': [362, 385, 387, 263]}  
 
     def _load_temp_faces(self, temp_faces):
         known_data = {'encodings': [], 'names': []}
@@ -48,12 +49,29 @@ class FaceAnalyzer:
             self._update_tracking(boxes, rgb_frame)
         
         if mesh_results := self.face_mesh.process(rgb_frame).multi_face_landmarks:
-                for landmarks in mesh_results:
-                    emotion, color = self._analyze_emotion(landmarks)
-                    cx = int(landmarks.landmark[1].x * w)
-                    cy = int(landmarks.landmark[1].y * h)
-                    cv2.putText(frame, f"Emotion: {emotion}", (cx-50, cy-50), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+            for i, landmarks in enumerate(mesh_results):
+                emotion, color = self._analyze_emotion(landmarks)
+                cx = int(landmarks.landmark[1].x * w)
+                cy = int(landmarks.landmark[1].y * h)
+                cv2.putText(frame, f"Emotion: {emotion}", (cx-50, cy-50), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+                
+                lm_coords = landmarks.landmark
+                upper_lip_y = sum(lm_coords[i].y for i in self.lip_indices[:8]) / 8
+                lower_lip_y = sum(lm_coords[i].y for i in self.lip_indices[8:]) / 8
+                lip_dist = abs(upper_lip_y - lower_lip_y)
+                
+                landmark_center = (int(landmarks.landmark[1].x * w), int(landmarks.landmark[1].y * h))
+                for face_id, data in self.tracked_faces.items():
+                    if 'center' in data and np.sqrt((landmark_center[0] - data['center'][0])**2 + 
+                                                (landmark_center[1] - data['center'][1])**2) < 50:
+                        name = data['name']
+                        is_speaking = lip_dist > 0.025
+                        self.active_speakers[name] = is_speaking
+                        
+                        if is_speaking:
+                            self.speaking_times[name] = self.speaking_times.get(name, 0) + 1/30  
+                        break
             
         for face_id, data in self.tracked_faces.items():
             if 'box' in data:
@@ -62,10 +80,17 @@ class FaceAnalyzer:
                 
                 name = data['name']
                 duration = self.speaking_times.get(name, 0)
-                cv2.putText(frame, f"{name} ({duration:.1f}s)", (x1, y2 + 20), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                status = "Speaking" if self.active_speakers.get(name, False) else ""
+                cv2.putText(frame, f"{name} ({duration:.1f}s) {status}", (x1, y2 + 20), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         
         return frame
+
+    def print_results(self):
+        print("\n--- Speaking Time Results ---")
+        for name, duration in self.speaking_times.items():
+            print(f"{name}: {duration:.1f} seconds")
+        print("---------------------------\n")
 
     def _update_tracking(self, boxes, rgb_frame):
         for fid in self.tracked_faces:
@@ -86,9 +111,9 @@ class FaceAnalyzer:
                         min_dist = dist
                         face_id = fid
             
-            if face_id:  # Update existing face
+            if face_id: 
                 self.tracked_faces[face_id].update({'center': center, 'box': box, 'active': True})
-            else:  # Create new face
+            else:  
                 face_location = (y1, x2, y2, x1)
                 name = "Unknown"
                 
@@ -115,31 +140,50 @@ class FaceAnalyzer:
         return "Unknown"
 
     def _analyze_emotion(self, landmarks):
-        # Cache landmark coordinates for faster access
         lm_coords = landmarks.landmark
         
-        # Calculate lip distance more efficiently
+        face_width = abs(lm_coords[454].x - lm_coords[234].x)
+        face_height = abs(lm_coords[152].y - lm_coords[10].y)
+        
         upper_lip_y = sum(lm_coords[i].y for i in self.lip_indices[:8]) / 8
         lower_lip_y = sum(lm_coords[i].y for i in self.lip_indices[8:]) / 8
-        lip_dist = abs(upper_lip_y - lower_lip_y)
+        
+        lip_dist = abs(upper_lip_y - lower_lip_y) / face_height
+        
+        is_speaking = lip_dist > 0.08  
 
-        # Calculate eyebrow position directly
+        
         left_eyebrow_y = sum(lm_coords[i].y for i in self.eyebrow_indices['left']) / len(self.eyebrow_indices['left'])
         right_eyebrow_y = sum(lm_coords[i].y for i in self.eyebrow_indices['right']) / len(self.eyebrow_indices['right'])
-        eyebrow_avg = (left_eyebrow_y + right_eyebrow_y) * 0.5  # Faster than division by 2.0
+        eyebrow_avg = (left_eyebrow_y + right_eyebrow_y) * 0.5  
         
-        # Use predefined emotion tuples to avoid repeated tuple creation
         HAPPY = ("HAPPY", (0, 255, 0))
         ANNOYED = ("ANNOYED", (0, 0, 255))
         NEUTRAL = ("NEUTRAL", (200, 200, 200))
         
-        # Determine emotion with early returns
-        if lip_dist > 0.04:
-            return HAPPY
-        if eyebrow_avg < 0.27:
-            return ANNOYED
-        return NEUTRAL
+        left_eye_h = abs(lm_coords[159].y - lm_coords[145].y) / face_height
+        right_eye_h = abs(lm_coords[386].y - lm_coords[374].y) / face_height
+        eye_avg = (left_eye_h + right_eye_h) / 2
 
+        if lip_dist > 0.1 and eye_avg > 0.05:
+            return ("HAPPY", (0, 255, 0))
+        elif eyebrow_avg < 0.25 and eye_avg < 0.03:
+            return ("ANNOYED", (0, 0, 255))
+        else:
+            return ("NEUTRAL", (200, 200, 200))
+        
+    def detect_unknown_faces(self, frame):
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        face_locations = face_recognition.face_locations(rgb_frame)
+        unknown_faces = []
+        
+        for (top, right, bottom, left) in face_locations:
+            face_encoding = face_recognition.face_encodings(rgb_frame, [(top, right, bottom, left)])
+            if not self._identify_face(face_encoding[0]) == "Unknown":
+                continue
+            unknown_faces.append(frame[top:bottom, left:right])
+        
+        return unknown_faces
 
 
 def main():

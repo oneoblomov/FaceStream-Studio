@@ -5,10 +5,11 @@ from Analyzer import FaceAnalyzer
 import os
 import io
 import uuid
+from PIL import Image
 
 def init_session():
     st.session_state.setdefault('camera_running', False)
-    st.session_state.setdefault('model_path', "src/yolov11l-face.pt")
+    st.session_state.setdefault('model_path')
     st.session_state.setdefault('face_match_threshold', 0.6)
     st.session_state.setdefault('max_faces', 5)
     st.session_state.setdefault('frame_skip', 2)
@@ -67,7 +68,12 @@ def handle_media_stream(input_source, is_camera=True):
 def settings_interface():
     st.sidebar.header("⚙️ FaceAnalyzer Ayarları")
 
-    st.session_state.model_path = st.sidebar.text_input("Model Path", value=st.session_state.model_path)
+    st.session_state.model_path = st.sidebar.radio(
+        "Model Seçimi",
+        ("src/yolov11l-face.pt", "src/yolov8n-face.pt"),
+        index=0,
+        format_func=lambda x: x.split(".")[0].split("/")[-1]
+    )
     st.sidebar.slider("Face Match Threshold", 0.3, 1.0, value=st.session_state.face_match_threshold, key="face_match_threshold")
     st.sidebar.slider("Max Faces", 1, 10, value=st.session_state.max_faces, key="max_faces")
     st.sidebar.slider("Frame Skip", 1, 10, value=st.session_state.frame_skip, key="frame_skip")
@@ -101,25 +107,30 @@ def settings_interface():
             st.error(f"Hata: {e}")
 
 def unknown_faces_panel():
+    
     with st.sidebar.expander("Tanınmayan Yüzler", expanded=True):
         if not st.session_state.unknown_faces:
             st.info("Tanınmayan yüz bulunamadı.")
         else:
-            for face_id, face_data in list(st.session_state.unknown_faces.items())[:10]:  # Limit to 10 faces
-                col1, col2 = st.columns([1, 2])
-                with col1:
-                    st.image(io.BytesIO(face_data), width=80)
-                with col2:
-                    new_name = st.text_input(f"İsim", key=f"unknown_{face_id}")
-                    if st.button("Ekle", key=f"add_{face_id}") and new_name:
-                        st.session_state.temp_faces[new_name.strip()] = face_data
-                        del st.session_state.unknown_faces[face_id]
-                        st.success(f"{new_name.strip()} eklendi!")
-                        st.rerun()
-                    if st.button("Sil", key=f"del_unknown_{face_id}"):
-                        del st.session_state.unknown_faces[face_id]
-                        st.rerun()
-                st.markdown("---")
+            for face_id, face_data in list(st.session_state.unknown_faces.items())[:10]:  
+                try:
+                    img = Image.open(io.BytesIO(face_data))
+                    col1, col2 = st.columns([1, 2])
+                    with col1:
+                        st.image(img, width=80)
+                    with col2:
+                        new_name = st.text_input(f"İsim", key=f"unknown_{face_id}")
+                        if st.button("Ekle", key=f"add_{face_id}") and new_name:
+                            st.session_state.temp_faces[new_name.strip()] = face_data
+                            del st.session_state.unknown_faces[face_id]
+                            st.success(f"{new_name.strip()} eklendi!")
+                            st.rerun()
+                        if st.button("Sil", key=f"del_unknown_{face_id}"):
+                            del st.session_state.unknown_faces[face_id]
+                            st.rerun()
+                    st.markdown("---")
+                except Exception as e:
+                    st.error(f"Görüntü yükleme hatası: {e}")
 
 def camera_interface():
     st.header("📷 Live Camera Face Analysis")
@@ -216,7 +227,7 @@ def main():
 
     with st.sidebar.expander("⚙️ Ayarlar ve Yüz Yönetimi", expanded=True):
         settings_interface()
-
+    
     if mode == "Kamera":
         camera_interface()
     elif mode == "Video":

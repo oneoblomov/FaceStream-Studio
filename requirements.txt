@@ -1,0 +1,6 @@
+opencv-python
+streamlit
+ultralytics
+face-recognition
+mediapipe
+numpy
