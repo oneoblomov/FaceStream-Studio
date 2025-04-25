@@ -179,7 +179,7 @@ class FaceAnalyzer:
         
         for (top, right, bottom, left) in face_locations:
             face_encoding = face_recognition.face_encodings(rgb_frame, [(top, right, bottom, left)])
-            if not self._identify_face(face_encoding[0]) == "Unknown":
+            if self._identify_face(face_encoding[0]) != "Unknown":
                 continue
             unknown_faces.append(frame[top:bottom, left:right])
         
