@@ -2,6 +2,5 @@ streamlit
 opencv-python
 mediapipe
 ultralytics
-face-recognition
 numpy
 Pillow
