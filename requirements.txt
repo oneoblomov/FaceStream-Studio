@@ -1,6 +1,6 @@
 streamlit
 opencv-python
-mediapipe
 ultralytics
+mediapipe
 numpy
 Pillow
