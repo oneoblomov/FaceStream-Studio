@@ -1,7 +1,0 @@
-streamlit
-opencv-python
-ultralytics
-mediapipe
-numpy
-Pillow
-cmake
