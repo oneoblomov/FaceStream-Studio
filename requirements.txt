@@ -4,3 +4,4 @@ ultralytics
 mediapipe
 numpy
 Pillow
+cmake
