@@ -4,7 +4,6 @@ import tempfile
 from Analyzer import FaceAnalyzer
 import os
 import io
-from PIL import Image
 
 def init_session():
     st.session_state.setdefault('camera_running', False)
@@ -52,6 +51,10 @@ def handle_media_stream(input_source, is_camera=True):
     frame_placeholder = st.empty()
     
     cap = cv2.VideoCapture(input_source if is_camera else str(input_source))
+    if not cap.isOpened():
+        st.error("Video dosyası açılamadı. Lütfen farklı bir dosya seçin veya dosyanın bozuk olmadığından emin olun.")
+        return analyzer
+
     try:
         while cap.isOpened():
             success, frame = cap.read()
@@ -172,12 +175,10 @@ def video_interface():
                 tmp_file.write(uploaded_file.read())
                 video_path = tmp_file.name
             
-            st.video(uploaded_file.getvalue())
-            
             if st.button("Analiz Başlat"):
                 analyzer = handle_media_stream(video_path, is_camera=False)
                 display_speech_results(analyzer)
-                os.unlink(video_path)
+                # os.unlink(video_path)  # Remove this line, deletion handled in handle_media_stream()
     
     with right_col:
         add_new_face_ui()

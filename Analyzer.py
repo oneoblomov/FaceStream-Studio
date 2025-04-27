@@ -75,16 +75,19 @@ class FaceAnalyzer:
 
     def _update_speaking_status(self, landmarks, w, h):
         lm_coords = landmarks.landmark
-        
+
         # Calculate face height for normalization
         face_height = abs(lm_coords[152].y - lm_coords[10].y)
-        
-        upper_lip_y = sum(lm_coords[i].y for i in self.lip_indices[:8]) / 8
-        lower_lip_y = sum(lm_coords[i].y for i in self.lip_indices[8:]) / 8
-        
+
+        # Use only the center points of upper and lower lip for distance
+        upper_lip_idx = 13  # Mediapipe: upper lip center
+        lower_lip_idx = 14  # Mediapipe: lower lip center
+        upper_lip_y = lm_coords[upper_lip_idx].y
+        lower_lip_y = lm_coords[lower_lip_idx].y
+
         # Normalize lip distance by face height
         lip_dist = abs(upper_lip_y - lower_lip_y) / face_height
-        
+
         landmark_center = (int(landmarks.landmark[1].x * w), int(landmarks.landmark[1].y * h))
         for _, data in self.tracked_faces.items():
             if not self._is_face_near_landmark(data, landmark_center):
@@ -93,7 +96,7 @@ class FaceAnalyzer:
             # Adjusted threshold for normalized values
             is_speaking = lip_dist > 0.06
             self.active_speakers[name] = is_speaking
-            
+
             if is_speaking:
                 self.speaking_times[name] = self.speaking_times.get(name, 0) + (1/30)*self.FRAME_SKIP
             break
@@ -118,12 +121,6 @@ class FaceAnalyzer:
             status = "Speaking" if self.active_speakers.get(name, False) else ""
             cv2.putText(frame, f"{name} ({duration:.1f}s) {status}", (x1, y2 + 20), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-    def print_results(self):
-        print("\n--- Speaking Time Results ---")
-        for name, duration in self.speaking_times.items():
-            print(f"{name}: {duration:.1f} seconds")
-        print("---------------------------\n")
 
     def _update_tracking(self, boxes, rgb_frame):
         self._mark_faces_inactive()
