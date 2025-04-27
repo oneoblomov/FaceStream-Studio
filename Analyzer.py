@@ -76,16 +76,13 @@ class FaceAnalyzer:
     def _update_speaking_status(self, landmarks, w, h):
         lm_coords = landmarks.landmark
 
-        # Calculate face height for normalization
         face_height = abs(lm_coords[152].y - lm_coords[10].y)
 
-        # Use only the center points of upper and lower lip for distance
-        upper_lip_idx = 13  # Mediapipe: upper lip center
-        lower_lip_idx = 14  # Mediapipe: lower lip center
+        upper_lip_idx = 13  
+        lower_lip_idx = 14  
         upper_lip_y = lm_coords[upper_lip_idx].y
         lower_lip_y = lm_coords[lower_lip_idx].y
 
-        # Normalize lip distance by face height
         lip_dist = abs(upper_lip_y - lower_lip_y) / face_height
 
         landmark_center = (int(landmarks.landmark[1].x * w), int(landmarks.landmark[1].y * h))
@@ -93,7 +90,6 @@ class FaceAnalyzer:
             if not self._is_face_near_landmark(data, landmark_center):
                 continue
             name = data['name']
-            # Adjusted threshold for normalized values
             is_speaking = lip_dist > 0.06
             self.active_speakers[name] = is_speaking
 
