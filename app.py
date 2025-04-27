@@ -4,10 +4,8 @@ import tempfile
 from Analyzer import FaceAnalyzer
 import os
 import io
-import uuid
 from PIL import Image
 
-unKnownFaces= 'Tanınmayan Yüzler'
 def init_session():
     st.session_state.setdefault('camera_running', False)
     st.session_state.setdefault('model_path')
@@ -15,7 +13,8 @@ def init_session():
     st.session_state.setdefault('max_faces', 5)
     st.session_state.setdefault('frame_skip', 2)
     st.session_state.setdefault('temp_faces', {})
-    st.session_state.setdefault('unknown_faces', {})
+    st.session_state.setdefault('stop_video', False)
+    st.session_state.setdefault('speaking_times', {})
 
 def create_analyzer():
     return FaceAnalyzer(
@@ -31,35 +30,21 @@ def configure_analyzer(analyzer):
 
 def process_frame(analyzer, frame, frame_placeholder):
     processed = analyzer.process_frame(frame)
+    
+    # Konuşma sürelerini ekle
+    y_offset = 30
+    for i, (name, duration) in enumerate(analyzer.speaking_times.items()):
+        cv2.putText(processed, f"{name}: {duration:.1f}s", 
+                   (10, 30 + y_offset*i), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+    
+    # Store speaking times in session state for later use
+    st.session_state.speaking_times = analyzer.speaking_times
+    
     frame_placeholder.image(
         cv2.cvtColor(processed, cv2.COLOR_BGR2RGB),
         channels="RGB"
     )
-
-def handle_unknown_faces(analyzer, frame, is_camera):
-    if hasattr(analyzer, 'detect_unknown_faces'):
-        unknown_faces = analyzer.detect_unknown_faces(frame)
-    else:
-        unknown_faces = getattr(analyzer, 'unknown_faces', [])
-    
-    if is_camera and len(unknown_faces) > 0:
-        st.write(f"Found {len(unknown_faces)} unknown faces")
-        
-    store_unknown_faces(unknown_faces)
-
-def store_unknown_faces(unknown_faces):
-    for face_img in unknown_faces:
-        face_id = str(uuid.uuid4())[:8]
-        is_success, buffer = cv2.imencode(".jpg", face_img)
-        if is_success:
-            st.session_state.unknown_faces[face_id] = buffer.tobytes()
-
-def check_stop_condition(is_camera):
-    if not is_camera and st.session_state.get('stop_video', False):
-        return True
-    if is_camera and not st.session_state.camera_running:
-        return True
-    return False
 
 def handle_media_stream(input_source, is_camera=True):
     analyzer = create_analyzer()
@@ -74,44 +59,67 @@ def handle_media_stream(input_source, is_camera=True):
                 break
 
             process_frame(analyzer, frame, frame_placeholder)
-            handle_unknown_faces(analyzer, frame, is_camera)
             
-            if check_stop_condition(is_camera):
+            if st.session_state.get('stop_video', False):
                 break
             
     finally:
         cap.release()
+        if not is_camera:
+            os.unlink(input_source) if os.path.exists(input_source) else None
     return analyzer
 
 def display_model_settings():
     st.sidebar.header("⚙️ FaceAnalyzer Ayarları")
+    
+    try:
+        model_files = [f"src/{f}" for f in os.listdir('src') if f.endswith('.pt')]
+        st.session_state.model_path = st.sidebar.radio(
+            "Model Seçimi",
+            model_files,
+            index=0,
+            format_func=lambda x: x.split("/")[-1].split(".")[0]
+        )
+    except FileNotFoundError:
+        st.sidebar.error("src klasörü bulunamadı!")
+    
+    st.sidebar.slider("Yüz Eşleşme Eşiği", 0.3, 1.0, value=st.session_state.face_match_threshold, key="face_match_threshold")
+    st.sidebar.slider("Maksimum Yüz Sayısı", 1, 10, value=st.session_state.max_faces, key="max_faces")
+    st.sidebar.slider("Frame Atlatma", 1, 10, value=st.session_state.frame_skip, key="frame_skip")
 
-    st.session_state.model_path = st.sidebar.radio(
-        "Model Seçimi",
-        ("src/yolov11l-face.pt", "src/yolov8n-face.pt"),
-        index=0,
-        format_func=lambda x: x.split(".")[0].split("/")[-1]
-    )
-    st.sidebar.slider("Face Match Threshold", 0.3, 1.0, value=st.session_state.face_match_threshold, key="face_match_threshold")
-    st.sidebar.slider("Max Faces", 1, 10, value=st.session_state.max_faces, key="max_faces")
-    st.sidebar.slider("Frame Skip", 1, 10, value=st.session_state.frame_skip, key="frame_skip")
-
-def display_saved_face(face_name):
-    col1, col2 = st.sidebar.columns([1, 3])
+def display_saved_face(face_name, in_sidebar=True):
+    if in_sidebar:
+        col1, col2, col3 = st.sidebar.columns([1, 2, 1])
+    else:
+        col1, col2, col3 = st.columns([1, 2, 1])
+    
     with col1:
         st.image(io.BytesIO(st.session_state.temp_faces[face_name]), width=60)
     with col2:
         st.write(face_name)
-        if st.button(f"❌ {face_name}", key=f"del_{face_name}"):
+        speaking_time = st.session_state.speaking_times.get(face_name, 0)
+        st.caption(f"{speaking_time:.1f} saniye")
+    with col3:
+        if st.button(f"❌", key=f"del_{face_name}{'_panel' if not in_sidebar else ''}"):
             del st.session_state.temp_faces[face_name]
             st.rerun()
 
+def display_temp_faces_panel():
+    st.markdown("---")
+    st.subheader("Geçici Yüzler")
+
+    if st.session_state.temp_faces:
+        for face_name in list(st.session_state.temp_faces.keys()):
+            display_saved_face(face_name, in_sidebar=False)
+    else:
+        st.info("Kayıtlı yüz bulunamadı.")
+
 def add_new_face_ui():
-    st.sidebar.markdown("**Yeni Yüz Ekle**")
-    uploaded_face = st.sidebar.file_uploader("Yüz fotoğrafı yükle", type=["jpg", "jpeg", "png"])
-    new_name = st.sidebar.text_input("Yüz ismi")
+    st.markdown("**Yeni Yüz Ekle**")
+    uploaded_face = st.file_uploader("Yüz fotoğrafı yükle", type=["jpg", "jpeg", "png"])
+    new_name = st.text_input("Yüz ismi")
     
-    if st.sidebar.button("Yüz Ekle") and uploaded_face and new_name:
+    if st.button("Yüz Ekle") and uploaded_face and new_name:
         try:
             st.session_state.temp_faces[new_name.strip()] = uploaded_face.getvalue()
             st.success(f"{new_name.strip()} eklendi!")
@@ -120,173 +128,75 @@ def add_new_face_ui():
             st.error(f"Hata: {e}")
 
 def settings_interface():
-    display_model_settings()
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Geçici Yüzler")
+    with st.sidebar.expander("⚙️ Ayarlar", expanded=True):
+        display_model_settings()
 
-    if st.session_state.temp_faces:
-        for face_name in list(st.session_state.temp_faces.keys()):
-            display_saved_face(face_name)
-    else:
-        st.sidebar.info("Kayıtlı yüz bulunamadı.")
-
-    add_new_face_ui()
-
-def display_unknown_face_item(face_id, face_data):
-    try:
-        img = Image.open(io.BytesIO(face_data))
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.image(img, width=80)
-        with col2:
-            new_name = st.text_input("İsim", key=f"unknown_{face_id}")
-            if st.button("Ekle", key=f"add_{face_id}") and new_name:
-                st.session_state.temp_faces[new_name.strip()] = face_data
-                del st.session_state.unknown_faces[face_id]
-                st.success(f"{new_name.strip()} eklendi!")
-                st.rerun()
-            if st.button("Sil", key=f"del_unknown_{face_id}"):
-                del st.session_state.unknown_faces[face_id]
-                st.rerun()
-        st.markdown("---")
-    except Exception as e:
-        st.error(f"Görüntü yükleme hatası: {e}")
-
-def unknown_faces_panel():
-    with st.sidebar.expander(unKnownFaces, expanded=True):
-        if not st.session_state.unknown_faces:
-            st.info("Tanınmayan yüz bulunamadı.")
-            return
-            
-        for face_id, face_data in list(st.session_state.unknown_faces.items())[:10]:  
-            display_unknown_face_item(face_id, face_data)
+def display_speech_results(analyzer):
+    st.subheader("🎙️ Konuşma Süreleri")
+    if not analyzer.speaking_times:
+        st.info("Konuşma tespit edilmedi")
+        return
+    
+    for name, duration in analyzer.speaking_times.items():
+        st.metric(label=name, value=f"{duration:.1f} saniye")
 
 def camera_interface():
-    st.header("📷 Live Camera Face Analysis")
+    st.header("📷 Canlı Kamera Analizi")
     
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        toggle_camera_button()
-        process_camera_stream()
+    left_col, right_col = st.columns([3, 1])
     
-    with col2:
-        st.subheader(unKnownFaces)
-        display_unknown_faces()
+    with left_col:
+        if st.button("Başlat" if not st.session_state.camera_running else "Durdur"):
+            st.session_state.camera_running = not st.session_state.camera_running
+            st.rerun()
 
-def toggle_camera_button():
-    if st.button("Başlat" if not st.session_state.camera_running else "Durdur"):
-        st.session_state.camera_running = not st.session_state.camera_running
-        st.rerun()
-
-def process_camera_stream():
-    if st.session_state.camera_running:
-        analyzer = handle_media_stream(0)
         if st.session_state.camera_running:
-            analyzer.print_results()
-        st.session_state.camera_running = False
-        st.rerun()
+            analyzer = handle_media_stream(0)
+            display_speech_results(analyzer)
+            st.session_state.camera_running = False
+            st.rerun()
+    
+    with right_col:
+        add_new_face_ui()
+        display_temp_faces_panel()
 
 def video_interface():
-    st.header("🎞️ Video File Face Analysis")
+    st.header("🎞️ Video Dosyası Analizi")
     
-    col1, col2 = st.columns([3, 1])
+    left_col, right_col = st.columns([3, 1])
     
-    with col1:
-        uploaded_file = st.file_uploader("Video seçin", type=["mp4", "avi", "mov", "mkv"])
+    with left_col:
+        uploaded_file = st.file_uploader("Video yükle (MP4, AVI, MOV)", type=["mp4", "avi", "mov"])
         if uploaded_file:
-            process_uploaded_video(uploaded_file)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+                tmp_file.write(uploaded_file.read())
+                video_path = tmp_file.name
+            
+            st.video(uploaded_file.getvalue())
+            
+            if st.button("Analiz Başlat"):
+                analyzer = handle_media_stream(video_path, is_camera=False)
+                display_speech_results(analyzer)
+                os.unlink(video_path)
     
-    with col2:
-        st.subheader(unKnownFaces)
-        display_unknown_faces()
-
-def process_uploaded_video(uploaded_file):
-    video_key = f"video_analysis_{uploaded_file.file_id=}"
-    st.session_state.setdefault(video_key, {'running': False, 'path': None})
-
-    handle_video_analysis_buttons(video_key, uploaded_file)
-    run_video_analysis(video_key)
-
-def handle_video_analysis_buttons(video_key, uploaded_file):
-    if st.button("Analiz Başlat", key=f"start_{video_key}") and not st.session_state[video_key]['running']:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
-            tmp_file.write(uploaded_file.read())
-            st.session_state[video_key]['path'] = tmp_file.name
-        st.session_state[video_key]['running'] = True
-        st.session_state['stop_video'] = False
-        st.rerun()
-
-    if st.session_state[video_key]['running']:
-        if st.button("Analizi Durdur", key=f"stop_{video_key}"):
-            st.session_state['stop_video'] = True
-
-def run_video_analysis(video_key):
-    if not st.session_state[video_key]['running']:
-        return
-        
-    analyzer = handle_media_stream(st.session_state[video_key]['path'], is_camera=False)
-
-    cleanup_video_file(video_key)
-    
-    if not st.session_state.get('stop_video', False):
-        analyzer.print_results()
-
-    reset_video_state(video_key)
-
-def cleanup_video_file(video_key):
-    if st.session_state[video_key]['path'] and os.path.exists(st.session_state[video_key]['path']):
-        os.unlink(st.session_state[video_key]['path'])
-
-def reset_video_state(video_key):
-    st.session_state[video_key]['running'] = False
-    st.session_state[video_key]['path'] = None
-    st.session_state['stop_video'] = False
-    st.rerun()
-
-def save_unknown_face(face_id, name, face_data):
-    st.session_state.temp_faces[name.strip()] = face_data
-    del st.session_state.unknown_faces[face_id]
-    st.success(f"{name.strip()} eklendi!")
-    st.rerun()
-
-def display_unknown_face_ui(face_id, face_data):
-    st.image(io.BytesIO(face_data), width=150)
-    name = st.text_input("İsim", key=f"name_{face_id}")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Kaydet", key=f"save_{face_id}") and name:
-            save_unknown_face(face_id, name, face_data)
-    with col2:
-        if st.button("Yoksay", key=f"ignore_{face_id}"):
-            del st.session_state.unknown_faces[face_id]
-            st.rerun()
-    st.markdown("---")
-
-def display_unknown_faces():
-    if not st.session_state.unknown_faces:
-        st.info("Tanınmayan yüz bulunamadı.")
-        return
-        
-    for face_id, face_data in list(st.session_state.unknown_faces.items())[:5]:
-        display_unknown_face_ui(face_id, face_data)
+    with right_col:
+        add_new_face_ui()
+        display_temp_faces_panel()
 
 def main():
-    st.set_page_config(layout="wide")
-    st.title("🕵️ Face Analytics App")
+    st.set_page_config(page_title="Face Analytics", layout="wide")
+    st.title("🕵️ Yüz Analiz Uygulaması")
     init_session()
-
-    st.sidebar.title("Kontrol Paneli")
+    
     mode = st.sidebar.radio(
         "Çalışma Modu",
-        ("Kamera", "Video"),
+        ("📷 Kamera", "🎞️ Video"),
         index=0
     )
-
-    with st.sidebar.expander("⚙️ Ayarlar ve Yüz Yönetimi", expanded=True):
-        settings_interface()
     
-    if mode == "Kamera":
+    settings_interface()
+    
+    if "Kamera" in mode:
         camera_interface()
     else:
         video_interface()

@@ -4,10 +4,11 @@ import mediapipe as mp
 from ultralytics import YOLO
 import face_recognition
 import io
+import torch
 
 class FaceAnalyzer:
-    def __init__(self, model_path="src/yolov11l-face.pt", temp_faces=None):
-        self.model = YOLO(model_path).to("cuda")
+    def __init__(self, model_path, temp_faces=None):
+        self.model = YOLO(model_path).to("cuda" if torch.cuda.is_available() else "cpu")
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(max_num_faces=3, refine_landmarks=True)
         self.known_faces = self._load_temp_faces(temp_faces) if temp_faces else {'encodings': [], 'names': []}
         
@@ -42,14 +43,10 @@ class FaceAnalyzer:
         self.frame_counter += 1
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
-        # Process with model if needed
         if self.frame_counter % self.FRAME_SKIP == 0:
             self._detect_faces(rgb_frame)
             
-        # Process face landmarks
         self._process_face_landmarks(frame, rgb_frame)
-        
-        # Draw face boxes and info
         self._draw_face_info(frame)
         
         return frame
@@ -78,21 +75,27 @@ class FaceAnalyzer:
 
     def _update_speaking_status(self, landmarks, w, h):
         lm_coords = landmarks.landmark
+        
+        # Calculate face height for normalization
+        face_height = abs(lm_coords[152].y - lm_coords[10].y)
+        
         upper_lip_y = sum(lm_coords[i].y for i in self.lip_indices[:8]) / 8
         lower_lip_y = sum(lm_coords[i].y for i in self.lip_indices[8:]) / 8
-        lip_dist = abs(upper_lip_y - lower_lip_y)
+        
+        # Normalize lip distance by face height
+        lip_dist = abs(upper_lip_y - lower_lip_y) / face_height
         
         landmark_center = (int(landmarks.landmark[1].x * w), int(landmarks.landmark[1].y * h))
-        for face_id, data in self.tracked_faces.items():
+        for _, data in self.tracked_faces.items():
             if not self._is_face_near_landmark(data, landmark_center):
                 continue
-                
             name = data['name']
-            is_speaking = lip_dist > 0.025
+            # Adjusted threshold for normalized values
+            is_speaking = lip_dist > 0.06
             self.active_speakers[name] = is_speaking
             
             if is_speaking:
-                self.speaking_times[name] = self.speaking_times.get(name, 0) + 1/30
+                self.speaking_times[name] = self.speaking_times.get(name, 0) + (1/30)*self.FRAME_SKIP
             break
 
     def _is_face_near_landmark(self, face_data, landmark_center):
@@ -103,7 +106,7 @@ class FaceAnalyzer:
         return dist < 50
 
     def _draw_face_info(self, frame):
-        for face_id, data in self.tracked_faces.items():
+        for _, data in self.tracked_faces.items():
             if 'box' not in data:
                 continue
                 
@@ -150,13 +153,15 @@ class FaceAnalyzer:
             if 'center' not in data:
                 continue
                 
-            dist = np.sqrt((center[0] - data['center'][0])**2 + 
+            dist = np.sqrt((center[0] - data['center'][0])**2 +
                           (center[1] - data['center'][1])**2)
-            if dist < min_dist and dist < 100:
+            if dist < min_dist:
                 min_dist = dist
                 closest_id = fid
                 
-        return closest_id
+        if min_dist < 75: 
+            return closest_id
+        return None
 
     def _add_new_face(self, rgb_frame, box, center):
         x1, y1, x2, y2 = box
@@ -220,16 +225,3 @@ class FaceAnalyzer:
             return ("ANNOYED", (0, 0, 255))
         else:
             return ("NEUTRAL", (200, 200, 200))
-        
-    def detect_unknown_faces(self, frame):
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(rgb_frame)
-        unknown_faces = []
-        
-        for (top, right, bottom, left) in face_locations:
-            face_encoding = face_recognition.face_encodings(rgb_frame, [(top, right, bottom, left)])
-            if not face_encoding or self._identify_face(face_encoding[0]) != "Unknown":
-                continue
-            unknown_faces.append(frame[top:bottom, left:right])
-        
-        return unknown_faces
