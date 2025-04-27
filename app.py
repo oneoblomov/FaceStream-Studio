@@ -100,7 +100,7 @@ def display_saved_face(face_name, in_sidebar=True):
         speaking_time = st.session_state.speaking_times.get(face_name, 0)
         st.caption(f"{speaking_time:.1f} saniye")
     with col3:
-        if st.button(f"❌", key=f"del_{face_name}{'_panel' if not in_sidebar else ''}"):
+        if st.button("❌", key=f"del_{face_name}{'_panel' if not in_sidebar else ''}"):
             del st.session_state.temp_faces[face_name]
             st.rerun()
 
