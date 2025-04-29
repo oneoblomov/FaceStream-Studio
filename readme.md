@@ -1,132 +1,159 @@
-# **📘 Kullanıcı El Kitapçığı: Yüz Analizi ve Konuşma Takip Uygulaması**
+# 📘 Yüz Analiz Uygulaması Kullanıcı Kılavuzu
 
-## **1. Giriş ve Amaç**
+Bu kılavuz, **Yüz Analiz Uygulaması**'nın kurulumu, kullanımı ve özellikleri hakkında detaylı bilgi sunar.
 
-Bu uygulama, canlı kamera akışı veya yüklenen video dosyaları üzerinden:
+---
 
-- **Konuşan kişinin kimliğini** tanımlama,
-- **Konuşma sürelerini** hesaplama,
-- **Duygu durumu** (mutlu, rahatsız, nötr) tahmini yapma  
-  yeteneğine sahiptir. Proje, görüntü işleme ve makine öğrenimi tekniklerini kullanarak gerçek zamanlı analiz sunar.
+## 📥 Kurulum
 
-## **2. Sistem Gereksinimleri**
+### Gereksinimler
 
-- **İşletim Sistemi:** Windows 10/11, macOS 12+, Linux (Ubuntu 20.04+ önerilir)
-- **Python:** 3.8 veya üzeri
-- **Donanım:**
-  - GPU (CUDA desteği önerilir, ancak CPU ile de çalışır)
-  - Web kamerası (canlı analiz için)
-- **Kütüphaneler:**
-  - `opencv-python`, `streamlit`, `ultralytics`, `face-recognition`, `mediapipe`, `numpy`
+- Python 3.8 veya üzeri
+- `requirements.txt` dosyasında listelenen kütüphaneler
 
-## **3. Kurulum Talimatları**
+### Kurulum Adımları
 
-### **Adım 1: Kodun İndirilmesi**
+1. **Sanal Ortam Oluşturun (Önerilir):**  
+   Proje bağımlılıklarını yönetmek için sanal ortam kullanmanız önerilir.
 
-- Proje dosyalarını GitHub üzerinden indirin veya `.zip` olarak kaydedin.
+   ```bash
+   python -m venv myenv
+   source myenv/bin/activate  # Linux/Mac
+   myenv\Scripts\activate    # Windows
+   ```
 
-### **Adım 2: Sanal Ortam Oluşturma (Opsiyonel)**
+2. **Bağımlılıkları Yükleyin:**  
+   Gerekli kütüphaneleri yüklemek için aşağıdaki komutu çalıştırın:
 
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### **Adım 3: Bağımlılıkların Yüklenmesi**
+3. **Model Dosyalarını Kontrol Edin:**  
+   Uygulamanın çalışabilmesi için `src` klasöründe YOLO model dosyaları (`.pt` uzantılı) bulunmalıdır.  
+   Örnek klasör yapısı:
 
-```bash
-pip install opencv-python streamlit ultralytics face-recognition mediapipe numpy
-```
+   ```
+   proje_dizini/
+   ├── src/
+   │   ├── yolov8n-face.pt
+   │   └── ...
+   ├── Analyzer.py
+   ├── app.py
+   └── requirements.txt
+   ```
 
-### **Adım 4: Yüz Veri Kümesinin Hazırlanması**
+---
 
-- `faces` klasörüne tanınmasını istediğiniz kişilerin fotoğraflarını ekleyin (`.jpg`, `.png` formatında).  
-  Örnek:
+## 🚀 Uygulamanın Başlatılması
 
-  ```plaintext
-  ├── faces/
-  │   ├── ahmet.jpg
-  │   └── mehmet.png
-  ```
-
-#### **Adım 5: Uygulamayı Başlatma**
+Terminalde aşağıdaki komutu çalıştırarak uygulamayı başlatın:
 
 ```bash
 streamlit run app.py
 ```
 
-## **4. Kullanım Kılavuzu**
+---
 
-### **Arayüze Erişim**
+## 🖥️ Ana Arayüz ve Temel Kullanım
 
-Uygulama başlatıldığında tarayıcınızda otomatik olarak bir sekme açılır.
+- **Çalışma Modu Seçimi:**  
+  Sol menüden **📷 Kamera** veya **🎞️ Video** modunu seçebilirsiniz.
+- **Ayarlar:**  
+  `⚙️ Ayarlar` menüsünden model parametrelerini özelleştirebilirsiniz.
 
-### **Mod Seçimi**
+---
 
-- **Canlı Kamera Modu:**
+## 📷 Kamera Modu
 
-  1. Sol menüden **"Camera"** seçin.
-  2. **"Start"** düğmesine basarak analizi başlatın.
-  3. **"Stop"** düğmesi ile durdurun.
+### Özellikler
 
-  - **Çıktı:** Ekranda gerçek zamanlı yüz tanıma, duygu durumu ve konuşma süreleri görüntülenir.
+- **Canlı Analiz:** Kamera ile gerçek zamanlı yüz tanıma, duygu analizi ve konuşma süresi takibi.
+- **Yüz Ekleme:** Sağ panelden yeni yüzler ekleyebilirsiniz.
 
-- **Video Dosyası Modu:**
-  1. Sol menüden **"Video"** seçin.
-  2. **"Choose a video"** ile bir video yükleyin (mp4, avi, mov).
-  3. Analiz otomatik başlar.
-  - **Çıktı:** Analiz tamamlandığında konsolda konuşma süreleri listelenir.
+### Kullanım Adımları
 
-## **5. Sonuçların Yorumlanması**
+1. **"Başlat"** düğmesine tıklayın.
+2. Kamera görüntüsü ekranda belirecektir.
+3. **"Durdur"** düğmesi ile analizi sonlandırabilirsiniz.
 
-- **Ekran Çıktıları:**
-  - **Yeşil Kutu:** Mutlu ifade.
-  - **Kırmızı Kutu:** Rahatsız ifade.
-  - **Gri Kutu:** Nötr ifade.
-  - **Alt Bilgi:** Kişi adı ve toplam konuşma süresi.
-- **Konsol Çıktıları:**
+---
 
-  ```plaintext
-  --- Konuşma Süreleri ---
-  Ahmet: 34.25 saniye
-  Mehmet: 22.50 saniye
-  ```
+## 🎞️ Video Modu
 
-## **6. Sorun Giderme**
+### Özellikler
 
-- **Kamera Açılmıyorsa:**
+- **Video Yükleme:** MP4, AVI veya MOV formatında video dosyalarını analiz edebilirsiniz.
+- **Sonuçlar:** Konuşma süreleri ve yüz tanıma sonuçları sağ panelde görüntülenir.
 
-  - Güvenlik ayarlarınızda kamera erişimine izin verin.
-  - `cv2.VideoCapture(0)` satırındaki "0" değerini farklı bir indeksle değiştirin (örn. 1).
+### Kullanım Adımları
 
-- **Bağımlılık Hataları:**
+1. **"Video yükle"** butonuyla bir dosya seçin.
+2. **"Analiz Başlat"** düğmesine tıklayın.
+3. Analiz tamamlandığında sonuçlar sağ panelde gösterilecektir.
 
-  ```bash
-  pip install --upgrade numpy  # Belirli kütüphaneleri güncelleyin
-  ```
+---
 
-- **Yüz Tanıma Çalışmıyorsa:**
-  - `faces` klasöründeki görsellerin yüksek çözünürlüklü ve tek kişi içerdiğinden emin olun.
+## 👤 Yüz Yönetimi
 
-## **7. Bilinen Sınırlamalar**
+### Yeni Yüz Ekleme
 
-- Duygu tahmini, aydınlatma ve kamera açısından etkilenebilir.
-- Yüksek çözünürlüklü videolarda performans düşebilir.
+1. Sağ paneldeki **"Yeni Yüz Ekle"** bölümüne gidin.
+2. Bir fotoğraf yükleyin ve isim girin.
+3. **"Yüz Ekle"** düğmesine tıklayın.
 
-## **8. İletişim ve Destek**
+### Kayıtlı Yüzleri Silme
 
-- **Hata Bildirimi:** [GitHub Issues](https://github.com/oneoblomov/yourproject/issues)
-- **E-posta:** <muhakaplan@hotmail.com>
+- Yüzlerin yanındaki **❌** simgesine tıklayarak silebilirsiniz.
 
-## **9. Ekler**
+---
 
-### **Parametre Açıklamaları**
+## ⚙️ Ayarlar
 
-- **`SPEAKING_THRESHOLD`:** Konuşma tespiti için dudak hareketi eşiği (varsayılan: `0.05`).
-- **`FACE_RECOGNITION_THRESHOLD`:** Yüz tanıma hassasiyeti (varsayılan: `0.6`).
+### Model Parametreleri (Sol Menü)
 
-### **Geliştirici Notları**
+- **Yüz Eşleşme Eşiği:** Yüz tanıma hassasiyetini ayarlar (düşük değer = daha hassas).
+- **Maksimum Yüz Sayısı:** Aynı anda tespit edilecek maksimum yüz sayısı.
+- **Frame Atlatma:** İşlem hızını artırmak için analiz edilmeyen kare sayısı.
 
-- Yeni duygu sınıfları eklemek için `analyze_emotion()` metodunu değiştirin.
-- Model dosyalarını `yolov11l-face.pt` yerine özel eğitilmiş modellerle değiştirebilirsiniz.
+---
+
+## 🛠️ Sorun Giderme
+
+### Sık Karşılaşılan Sorunlar ve Çözümleri
+
+1. **Model Dosyaları Bulunamadı:**  
+   - `src` klasörünün doğru konumda olduğundan emin olun.
+   - Model dosyalarını [resmi YOLO reposundan](https://github.com/ultralytics/ultralytics) indirip ilgili klasöre ekleyin.
+
+2. **Kamera Açılmıyor:**  
+   - Başka bir uygulamanın kamerayı kullanmadığından emin olun.
+   - Terminalde kamera erişim izinlerini kontrol edin.
+
+3. **Bağımlılık Hataları:**  
+   - Sanal ortam kullanıyorsanız yeniden etkinleştirin.
+   - Tüm kütüphanelerin doğru sürümlerini yükleyin:
+
+     ```bash
+     pip install --upgrade -r requirements.txt
+     ```
+
+---
+
+## 📊 Çıktılar ve Anlamları
+
+- **Duygu Analizi:** Yüz ifadeleri `HAPPY`, `ANNOYED` veya `NEUTRAL` olarak sınıflandırılır.
+- **Konuşma Süresi:** Her yüz için toplam konuşma süresi (saniye cinsinden) gösterilir.
+- **Yüz Kutuları:** Tanınan yüzler yeşil kutularla işaretlenir ve isimleri görüntülenir.
+
+---
+
+## 📞 İletişim ve Destek
+
+Her türlü soru, öneri veya teknik destek talepleriniz için lütfen aşağıdaki e-posta adresiyle iletişime geçin:
+
+**E-posta:** [muhakaplan@hotmail.com](mailto:muhakaplan@hotmail.com)
+
+---
+
+Bu kılavuz, uygulamanın temel işlevlerini etkin şekilde kullanmanıza yardımcı olacaktır.
