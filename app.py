@@ -8,6 +8,7 @@ import pandas as pd
 from datetime import datetime
 import json
 
+div= "</div>"
 # --- Language & Session Management ---
 def load_languages():
     try:
@@ -201,13 +202,13 @@ def display_saved_face(face_name, in_sidebar=True):
 
 def display_temp_faces_panel():
     LANG = get_lang()
-    st.markdown(f"""<div class="card">""", unsafe_allow_html=True)
+    st.markdown("""<div class="card">""", unsafe_allow_html=True)
     if st.session_state.temp_faces:
         for face_name in list(st.session_state.temp_faces.keys()):
             display_saved_face(face_name, in_sidebar=False)
     else:
         st.info(LANG["no_faces"])
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(div, unsafe_allow_html=True)
 
 def add_new_face_ui():
     LANG = get_lang()
@@ -225,7 +226,7 @@ def add_new_face_ui():
             st.rerun()
         except Exception as e:
             st.error(LANG["face_error"].format(e))
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(div, unsafe_allow_html=True)
 
 # --- UI: Results ---
 def display_speech_results(analyzer):
@@ -241,7 +242,7 @@ def display_speech_results(analyzer):
         for i, (name, duration) in enumerate(analyzer.speaking_times.items()):
             with cols[i % len(cols)]:
                 st.metric(label=name, value=f"{duration:.1f} {LANG['seconds']}")
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(div, unsafe_allow_html=True)
 
 # --- Main Interfaces ---
 def camera_interface():
@@ -268,7 +269,7 @@ def camera_interface():
     with right_col:
         display_temp_faces_panel()
         add_new_face_ui()
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(div, unsafe_allow_html=True)
 
 def video_interface():
     LANG = get_lang()
@@ -290,7 +291,7 @@ def video_interface():
     with right_col:
         display_temp_faces_panel()
         add_new_face_ui()
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(div, unsafe_allow_html=True)
 
 def main():
     init_session()
