@@ -7,6 +7,11 @@ import io
 import torch
 
 class FaceAnalyzer:
+    FRAME_SKIP = 3
+    MAX_FACES = 3
+    FACE_MATCH_THRESHOLD = 0.5
+    SPEAKING_LIP_DIST_THRESHOLD = 0.03  # Will be configurable from UI now
+
     def __init__(self, model_path, temp_faces=None):
         self.model = YOLO(model_path).to("cuda" if torch.cuda.is_available() else "cpu")
         self.face_mesh = mp.solutions.face_mesh.FaceMesh(max_num_faces=3, refine_landmarks=True)
@@ -18,13 +23,15 @@ class FaceAnalyzer:
         self.speaking_times = {}
         self.active_speakers = {}
         
-        self.FRAME_SKIP = 2
-        self.MAX_FACES = 5
-        self.FACE_MATCH_THRESHOLD = 0.6
-        
         self.lip_indices = list(range(61, 69)) + list(range(291, 299))
         self.eyebrow_indices = {'left': [70, 63, 105, 66, 107], 'right': [336, 296, 334, 300, 293]}  
         self.eye_indices = {'left': [33, 160, 158, 133], 'right': [362, 385, 387, 263]}  
+
+        # Add configuration flags
+        self.show_names = True
+        self.show_times = True
+        self.show_emotion = True
+        self.show_bounding_boxes = True
 
     def _load_temp_faces(self, temp_faces):
         known_data = {'encodings': [], 'names': []}
@@ -45,7 +52,9 @@ class FaceAnalyzer:
         
         if self.frame_counter % self.FRAME_SKIP == 0:
             self._detect_faces(rgb_frame)
-            
+        
+        # Reset active_speakers for this frame
+        self.active_speakers = {}
         self._process_face_landmarks(frame, rgb_frame)
         self._draw_face_info(frame)
         
@@ -70,7 +79,7 @@ class FaceAnalyzer:
     def _display_emotion(self, frame, landmarks, emotion, color, w, h):
         cx = int(landmarks.landmark[1].x * w)
         cy = int(landmarks.landmark[1].y * h)
-        cv2.putText(frame, f"Emotion: {emotion}", (cx-50, cy-50), 
+        cv2.putText(frame, emotion, (cx-50, cy-50), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
     def _update_speaking_status(self, landmarks, w, h):
@@ -90,7 +99,8 @@ class FaceAnalyzer:
             if not self._is_face_near_landmark(data, landmark_center):
                 continue
             name = data['name']
-            is_speaking = lip_dist > 0.06
+            # Use the new threshold for speaking detection
+            is_speaking = lip_dist > self.SPEAKING_LIP_DIST_THRESHOLD
             self.active_speakers[name] = is_speaking
 
             if is_speaking:
@@ -110,13 +120,32 @@ class FaceAnalyzer:
                 continue
                 
             x1, y1, x2, y2 = data['box']
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # Draw bounding box if enabled
+            if self.show_bounding_boxes:
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             
             name = data['name']
             duration = self.speaking_times.get(name, 0)
             status = "Speaking" if self.active_speakers.get(name, False) else ""
-            cv2.putText(frame, f"{name} ({duration:.1f}s) {status}", (x1, y2 + 20), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            
+            # Display text information if enabled
+            text_to_display = []
+            if self.show_names:
+                text_to_display.append(name)
+            if self.show_times:
+                text_to_display.append(f"{duration:.1f}s")
+            if status:
+                text_to_display.append(status)
+                
+            if text_to_display:
+                display_text = " ".join(text_to_display)
+                
+                # Create a semi-transparent background for text
+                text_size = cv2.getTextSize(display_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
+                cv2.rectangle(frame, (x1, y2 + 5), (x1 + text_size[0], y2 + 25), (0, 0, 0, 128), -1)
+                cv2.putText(frame, display_text, (x1, y2 + 20), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
     def _update_tracking(self, boxes, rgb_frame):
         self._mark_faces_inactive()
@@ -164,11 +193,14 @@ class FaceAnalyzer:
         encodings = face_recognition.face_encodings(rgb_frame, [face_location])
         if encodings:
             name = self._identify_face(encodings[0])
-        
+        if name == "Unknown":
+            return  # tracked_faces'e eklenmiyor, bir sonraki karede tekrar denenir
         self.tracked_faces[self.next_id] = {
             'name': name, 'center': center, 'box': box, 'active': True
         }
         self.next_id += 1
+        
+
 
     def _remove_inactive_faces(self):
         self.tracked_faces = {fid: data for fid, data in self.tracked_faces.items() if data['active']}
@@ -212,6 +244,10 @@ class FaceAnalyzer:
         return (left_eyebrow_y + right_eyebrow_y) * 0.5
 
     def _determine_emotion(self, lip_dist, eye_avg, eyebrow_avg):
+        # Only calculate emotion if it should be displayed
+        if not self.show_emotion:
+            return ("", (0, 0, 0))
+            
         if lip_dist > 0.1 and eye_avg > 0.05:
             return ("HAPPY", (0, 255, 0))
         elif eyebrow_avg < 0.25 and eye_avg < 0.03:
