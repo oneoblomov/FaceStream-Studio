@@ -10,7 +10,7 @@ class FaceAnalyzer:
     FRAME_SKIP = 3
     MAX_FACES = 3
     FACE_MATCH_THRESHOLD = 0.5
-    SPEAKING_LIP_DIST_THRESHOLD = 0.03  # Will be configurable from UI now
+    SPEAKING_LIP_DIST_THRESHOLD = 0.03 
 
     def __init__(self, model_path, temp_faces=None):
         self.model = YOLO(model_path).to("cuda" if torch.cuda.is_available() else "cpu")
@@ -27,11 +27,16 @@ class FaceAnalyzer:
         self.eyebrow_indices = {'left': [70, 63, 105, 66, 107], 'right': [336, 296, 334, 300, 293]}  
         self.eye_indices = {'left': [33, 160, 158, 133], 'right': [362, 385, 387, 263]}  
 
-        # Add configuration flags
         self.show_names = True
         self.show_times = True
         self.show_emotion = True
         self.show_bounding_boxes = True
+        self.fps = 30  # Varsayılan FPS
+
+    def set_fps(self, fps):
+        """Dışarıdan FPS güncellemesi için yardımcı fonksiyon."""
+        if fps > 0:
+            self.fps = fps
 
     def _load_temp_faces(self, temp_faces):
         known_data = {'encodings': [], 'names': []}
@@ -95,17 +100,24 @@ class FaceAnalyzer:
         lip_dist = abs(upper_lip_y - lower_lip_y) / face_height
 
         landmark_center = (int(landmarks.landmark[1].x * w), int(landmarks.landmark[1].y * h))
-        for _, data in self.tracked_faces.items():
-            if not self._is_face_near_landmark(data, landmark_center):
-                continue
-            name = data['name']
-            # Use the new threshold for speaking detection
-            is_speaking = lip_dist > self.SPEAKING_LIP_DIST_THRESHOLD
-            self.active_speakers[name] = is_speaking
 
+        # En yakın yüzü bul ve sadece ona konuşma durumu ata
+        min_dist = float('inf')
+        closest_name = None
+        for _, data in self.tracked_faces.items():
+            if 'center' not in data:
+                continue
+            dist = np.sqrt((landmark_center[0] - data['center'][0])**2 + 
+                           (landmark_center[1] - data['center'][1])**2)
+            if dist < min_dist and dist < 50:
+                min_dist = dist
+                closest_name = data['name']
+
+        if closest_name is not None:
+            is_speaking = lip_dist > self.SPEAKING_LIP_DIST_THRESHOLD
+            self.active_speakers[closest_name] = is_speaking
             if is_speaking:
-                self.speaking_times[name] = self.speaking_times.get(name, 0) + (1/30)*self.FRAME_SKIP
-            break
+                self.speaking_times[closest_name] = self.speaking_times.get(closest_name, 0) + (self.FRAME_SKIP / self.fps)
 
     def _is_face_near_landmark(self, face_data, landmark_center):
         if 'center' not in face_data:
@@ -121,7 +133,6 @@ class FaceAnalyzer:
                 
             x1, y1, x2, y2 = data['box']
             
-            # Draw bounding box if enabled
             if self.show_bounding_boxes:
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             
@@ -129,7 +140,6 @@ class FaceAnalyzer:
             duration = self.speaking_times.get(name, 0)
             status = "Speaking" if self.active_speakers.get(name, False) else ""
             
-            # Display text information if enabled
             text_to_display = []
             if self.show_names:
                 text_to_display.append(name)
@@ -141,7 +151,6 @@ class FaceAnalyzer:
             if text_to_display:
                 display_text = " ".join(text_to_display)
                 
-                # Create a semi-transparent background for text
                 text_size = cv2.getTextSize(display_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
                 cv2.rectangle(frame, (x1, y2 + 5), (x1 + text_size[0], y2 + 25), (0, 0, 0, 128), -1)
                 cv2.putText(frame, display_text, (x1, y2 + 20), 
@@ -194,7 +203,7 @@ class FaceAnalyzer:
         if encodings:
             name = self._identify_face(encodings[0])
         if name == "Unknown":
-            return  # tracked_faces'e eklenmiyor, bir sonraki karede tekrar denenir
+            return  
         self.tracked_faces[self.next_id] = {
             'name': name, 'center': center, 'box': box, 'active': True
         }
@@ -219,18 +228,17 @@ class FaceAnalyzer:
 
     def _analyze_emotion(self, landmarks):
         lm_coords = landmarks.landmark
-        
         face_height = abs(lm_coords[152].y - lm_coords[10].y)
-        
         lip_dist = self._calculate_lip_distance(lm_coords, face_height)
         eye_avg = self._calculate_eye_openness(lm_coords, face_height)
         eyebrow_avg = self._calculate_eyebrow_position(lm_coords)
-        
         return self._determine_emotion(lip_dist, eye_avg, eyebrow_avg)
 
     def _calculate_lip_distance(self, lm_coords, face_height):
-        upper_lip_y = sum(lm_coords[i].y for i in self.lip_indices[:8]) / 8
-        lower_lip_y = sum(lm_coords[i].y for i in self.lip_indices[8:]) / 8
+        upper_lip_points = [13, 312, 82, 191]
+        lower_lip_points = [14, 87, 317, 375]
+        upper_lip_y = np.mean([lm_coords[i].y for i in upper_lip_points])
+        lower_lip_y = np.mean([lm_coords[i].y for i in lower_lip_points])
         return abs(upper_lip_y - lower_lip_y) / face_height
 
     def _calculate_eye_openness(self, lm_coords, face_height):
@@ -239,18 +247,22 @@ class FaceAnalyzer:
         return (left_eye_h + right_eye_h) / 2
 
     def _calculate_eyebrow_position(self, lm_coords):
-        left_eyebrow_y = sum(lm_coords[i].y for i in self.eyebrow_indices['left']) / len(self.eyebrow_indices['left'])
-        right_eyebrow_y = sum(lm_coords[i].y for i in self.eyebrow_indices['right']) / len(self.eyebrow_indices['right'])
-        return (left_eyebrow_y + right_eyebrow_y) * 0.5
+        left_eyebrow = np.mean([lm_coords[i].y for i in self.eyebrow_indices['left']])
+        left_eye = np.mean([lm_coords[i].y for i in self.eye_indices['left']])
+        right_eyebrow = np.mean([lm_coords[i].y for i in self.eyebrow_indices['right']])
+        right_eye = np.mean([lm_coords[i].y for i in self.eye_indices['right']])
+        left_dist = left_eyebrow - left_eye
+        right_dist = right_eyebrow - right_eye
+        return (left_dist + right_dist) / 2
 
-    def _determine_emotion(self, lip_dist, eye_avg, eyebrow_avg):
-        # Only calculate emotion if it should be displayed
+    def _determine_emotion(self, lip_dist, eye_avg, eyebrow_dist):
         if not self.show_emotion:
             return ("", (0, 0, 0))
-            
-        if lip_dist > 0.1 and eye_avg > 0.05:
+        if lip_dist > 0.08 and eye_avg > 0.045 and eyebrow_dist > 0.03:
+            return ("SURPRISED", (255, 255, 0))
+        elif lip_dist > 0.06 and eye_avg > 0.035:
             return ("HAPPY", (0, 255, 0))
-        elif eyebrow_avg < 0.25 and eye_avg < 0.03:
+        elif eyebrow_dist < 0.01 and eye_avg < 0.025:
             return ("ANNOYED", (0, 0, 255))
         else:
             return ("NEUTRAL", (200, 200, 200))
