@@ -1,6 +1,14 @@
 # 📘 Yüz Analiz Uygulaması Kullanıcı Kılavuzu
 
-Bu kılavuz, **Yüz Analiz Uygulaması**'nın kurulumu, kullanımı ve özellikleri hakkında detaylı bilgi sunar.
+## Face Analysis Application User Guide
+
+Bu kılavuz, **Yüz Analiz Uygulaması** (FaceStream Studio) ile ilgili kurulum, kullanım ve özellikler hakkında detaylı bilgi sunar.
+
+---
+
+## 📝 Uygulama Özeti
+
+**FaceStream Studio**, gerçek zamanlı yüz tanıma, duygu analizi ve konuşma süresi takibi sağlayan bir Streamlit tabanlı uygulamadır. Kamera veya video dosyası üzerinden analiz yapabilir, yeni yüzler ekleyebilir ve sonuçları dışa aktarabilirsiniz.
 
 ---
 
@@ -60,7 +68,7 @@ streamlit run app.py
 - **Çalışma Modu Seçimi:**  
   Sol menüden **📷 Kamera** veya **🎞️ Video** modunu seçebilirsiniz.
 - **Ayarlar:**  
-  `⚙️ Ayarlar` menüsünden model parametrelerini özelleştirebilirsiniz.
+  `⚙️ Ayarlar` menüsünden model parametrelerini ve görüntüleme seçeneklerini özelleştirebilirsiniz.
 
 ---
 
@@ -110,11 +118,23 @@ streamlit run app.py
 
 ## ⚙️ Ayarlar
 
-### Model Parametreleri (Sol Menü)
+### Model ve Algılama Parametreleri
 
 - **Yüz Eşleşme Eşiği:** Yüz tanıma hassasiyetini ayarlar (düşük değer = daha hassas).
 - **Maksimum Yüz Sayısı:** Aynı anda tespit edilecek maksimum yüz sayısı.
 - **Frame Atlatma:** İşlem hızını artırmak için analiz edilmeyen kare sayısı.
+- **Konuşma Eşiği:** Konuşma tespiti için dudak mesafesi eşiği.
+
+### Görüntüleme Seçenekleri
+
+- **İsimleri Göster:** Tanınan yüzlerin isimlerini gösterir.
+- **Konuşma Süresini Göster:** Her yüz için konuşma süresini gösterir.
+- **Duygu Analizi:** Yüz ifadelerini gösterir.
+- **Kutu Göster:** Yüzlerin etrafında kutu çizer.
+
+### Dil ve Tema
+
+- **Dil Seçimi:** Uygulama arayüz dilini değiştirin.
 
 ---
 
@@ -122,15 +142,18 @@ streamlit run app.py
 
 ### Sık Karşılaşılan Sorunlar ve Çözümleri
 
-1. **Model Dosyaları Bulunamadı:**  
+1. **Model Dosyaları Bulunamadı:**
+
    - `src` klasörünün doğru konumda olduğundan emin olun.
    - Model dosyalarını [resmi YOLO reposundan](https://github.com/ultralytics/ultralytics) indirip ilgili klasöre ekleyin.
 
-2. **Kamera Açılmıyor:**  
+2. **Kamera Açılmıyor:**
+
    - Başka bir uygulamanın kamerayı kullanmadığından emin olun.
    - Terminalde kamera erişim izinlerini kontrol edin.
 
-3. **Bağımlılık Hataları:**  
+3. **Bağımlılık Hataları:**
+
    - Sanal ortam kullanıyorsanız yeniden etkinleştirin.
    - Tüm kütüphanelerin doğru sürümlerini yükleyin:
 
@@ -142,9 +165,15 @@ streamlit run app.py
 
 ## 📊 Çıktılar ve Anlamları
 
-- **Duygu Analizi:** Yüz ifadeleri `HAPPY`, `ANNOYED` veya `NEUTRAL` olarak sınıflandırılır.
+- **Duygu Analizi:** Yüz ifadeleri `HAPPY`, `ANNOYED`, `SURPRISED` veya `NEUTRAL` olarak sınıflandırılır.
 - **Konuşma Süresi:** Her yüz için toplam konuşma süresi (saniye cinsinden) gösterilir.
 - **Yüz Kutuları:** Tanınan yüzler yeşil kutularla işaretlenir ve isimleri görüntülenir.
+
+---
+
+## 📤 Sonuçları Dışa Aktarma
+
+- Sağ menüden analiz sonuçlarını CSV dosyası olarak indirebilirsiniz.
 
 ---
 
