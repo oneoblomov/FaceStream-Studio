@@ -96,26 +96,18 @@ class FaceAnalyzer:
     def _load_emotion_models(self):
         """Lazily load emotion models when needed"""
         model_dir = os.path.dirname(__file__)
-        self.emotion_model = None
-        self.emotion_scaler = None
-        self.emotion_labelencoder = None
-        self.emotion_selector = None
-        self.emotion_feature_names = None
         self.torch_model = None
         self.torch_scaler = None
         self.torch_le = None
         self.using_torch = False
-        
         try:
             torch_model_path = os.path.join(model_dir, "src", "models", "torch", "emotion_mlp.pth")
             torch_scaler_path = os.path.join(model_dir, "src", "models", "torch", "emotion_scaler.pkl")
             torch_le_path = os.path.join(model_dir, "src", "models", "torch", "emotion_labelencoder.pkl")
-            
             if all(os.path.exists(p) for p in [torch_model_path, torch_scaler_path, torch_le_path]):
                 self.torch_model = EmotionMLP(input_dim=936, num_classes=7).to(self.device)
                 self.torch_model.load_state_dict(torch.load(torch_model_path, map_location=self.device))
                 self.torch_model.eval()
-                
                 self.torch_scaler = joblib.load(torch_scaler_path)
                 self.torch_le = joblib.load(torch_le_path)
                 self.using_torch = True
@@ -123,18 +115,6 @@ class FaceAnalyzer:
                 return
         except Exception as e:
             print(f"PyTorch model yüklenemedi: {e}")
-        
-        try:
-            base_model_path           = os.path.join(model_dir, "models", "emotion_classifier")
-            self.emotion_model        = joblib.load(os.path.join(base_model_path, "emotion_classifier_model.pkl"))
-            self.emotion_scaler       = joblib.load(os.path.join(base_model_path, "emotion_classifier_scaler.pkl"))
-            self.emotion_labelencoder = joblib.load(os.path.join(base_model_path, "emotion_classifier_labelencoder.pkl"))
-            self.emotion_selector     = joblib.load(os.path.join(base_model_path, "emotion_classifier_selector.pkl"))
-            
-            self.emotion_feature_names = [f"x{i}" for i in range(468)] + [f"y{i}" for i in range(468)]
-            print("Duygu sınıflandırma modeli başarıyla yüklendi.")
-        except Exception as e:
-            print(f"Klasik model yüklenemedi: {e}")
 
     def _load_temp_faces(self, temp_faces):
         known_data = {'encodings': [], 'names': []}
@@ -337,25 +317,16 @@ class FaceAnalyzer:
         """Face expression based emotion recognition with caching"""
         if not self.show_emotion:
             return ("", self.EMOTION_COLOR)
-        
         if landmark_id and landmark_id in self.emotion_cache:
             return self.emotion_cache[landmark_id]
-        
         result = ("UNKNOWN", self.EMOTION_COLOR)
         if self.using_torch and self.torch_model:
             try:
                 result = self._predict_emotion_torch(landmarks)
             except Exception as e:
                 print(f"PyTorch emotion prediction failed: {e}")
-        elif self.emotion_model and self.emotion_scaler and self.emotion_labelencoder:
-            try:
-                result = self._predict_emotion_model(landmarks)
-            except Exception as e:
-                print(f"Model based emotion prediction failed: {e}")
-        
         if landmark_id:
             self._manage_cache(self.emotion_cache, landmark_id, result, self.MAX_EMOTION_CACHE_SIZE)
-                
         return result
 
     def _predict_emotion_torch(self, landmarks):
@@ -373,24 +344,6 @@ class FaceAnalyzer:
             logits = self.torch_model(tensor)
             pred = torch.argmax(logits, dim=1).cpu().item()
             emotion = self.torch_le.inverse_transform([pred])[0]
-        
-        return (emotion.upper(), self.EMOTION_COLOR)
-
-    def _predict_emotion_model(self, landmarks):
-        """Predict emotion using sklearn model"""
-        if not self.emotion_model or not self.emotion_scaler or not self.emotion_labelencoder:
-            return ("UNKNOWN", self.EMOTION_COLOR)
-            
-        features = self._extract_landmark_features(landmarks)
-            
-        X = pd.DataFrame([features], columns=self.emotion_feature_names)
-        x_scaled = self.emotion_scaler.transform(X)
-        
-        if self.emotion_selector:
-            x_scaled = self.emotion_selector.transform(x_scaled)
-        
-        pred = self.emotion_model.predict(x_scaled)[0]
-        emotion = self.emotion_labelencoder.inverse_transform([pred])[0]
         
         return (emotion.upper(), self.EMOTION_COLOR)
     

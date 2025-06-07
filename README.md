@@ -24,6 +24,7 @@ Yapay zeka destekli yüz tanıma, duygu analizi ve konuşma süresi ölçümü i
 
 ## 📋 İçindekiler
 
+- [🏗️ Proje Mimarisi ve Graf](#️-proje-mimarisi-ve-graf)
 - [🚀 Özellikler](#-özellikler)
 - [🎯 Teknolojiler](#-teknolojiler)
 - [📦 Kurulum](#-kurulum)
@@ -36,6 +37,81 @@ Yapay zeka destekli yüz tanıma, duygu analizi ve konuşma süresi ölçümü i
 - [🤝 Katkıda Bulunma](#-katkıda-bulunma)
 - [🔧 Geliştirme](#-geliştirme)
 - [📄 Lisans](#-lisans)
+
+---
+
+## 🏗️ Proje Mimarisi ve Graf
+
+FaceStream Studio projesi, modern AI/ML teknolojilerini kullanarak gerçek zamanlı yüz analizi yapan kapsamlı bir sistemdir. Aşağıdaki graf, projenin tüm bileşenlerini, bağımlılıklarını ve veri akışını detaylı olarak göstermektedir:
+
+![Proje Mimarisi Grafiği](graf.png)
+
+### 📊 Graf Açıklaması
+
+**🎨 Renk Kodları:**
+- 🟢 **Yeşil**: Python dosyaları (app.py, Analyzer.py)
+- 🟠 **Turuncu**: AI/ML model dosyaları (.pt, .pth, .pkl)
+- 🟡 **Sarı**: Yapılandırma dosyaları (JSON, TXT, MD)
+- 🔵 **Mavi**: Harici kütüphaneler ve framework'ler
+- 🟣 **Pembe**: Python sınıfları ve bileşenleri
+- 🟨 **Altın**: Uygulama özellikleri ve fonksiyonları
+
+**🏗️ Ana Bileşenler:**
+
+1. **Ana Uygulama Katmanı**
+   - `app.py`: Streamlit tabanlı web arayüzü
+   - `Analyzer.py`: Yüz analizi ve AI işlemleri motoru
+   - `languages.json`: Çoklu dil desteği konfigürasyonu
+
+2. **AI/ML Model Katmanı**
+   - `yolov11l-face.pt`: YOLO v11 yüz tespit modeli
+   - `emotion_mlp.pth`: Custom PyTorch duygu analizi modeli
+   - `emotion_scaler.pkl` & `emotion_labelencoder.pkl`: Model ön işleme bileşenleri
+
+3. **Kütüphane Ekosistemi**
+   - **Streamlit**: Web arayüzü framework'ü
+   - **OpenCV**: Görüntü işleme ve video operasyonları
+   - **PyTorch**: Deep learning model inference
+   - **MediaPipe**: Yüz landmark tespiti
+   - **Ultralytics**: YOLO model implementasyonu
+
+4. **Özellik Katmanı**
+   - Gerçek zamanlı yüz tespiti
+   - Duygu tanıma sistemi
+   - Konuşma analizi ve takibi
+   - Çoklu dil desteği
+   - Veri dışa aktarma
+
+### 🔄 Veri Akış Diyagramı
+
+```mermaid
+graph TB
+    A[Video Girdi] --> B[Frame İşleme]
+    B --> C[YOLO Yüz Tespiti]
+    C --> D[MediaPipe Landmark]
+    D --> E[Duygu Analizi MLP]
+    E --> F[Streamlit UI]
+    F --> G[CSV Export]
+    
+    H[Face Database] --> C
+    I[Model Weights] --> E
+    J[Language Config] --> F
+```
+
+### ⚙️ Sistem Mimarisi
+
+**🔧 Modüler Tasarım:**
+- **Separation of Concerns**: Her modül belirli bir sorumluluğa odaklanır
+- **Loose Coupling**: Bileşenler arası gevşek bağlantı
+- **High Cohesion**: İlgili fonksiyonlar aynı modülde gruplandırılmış
+- **Scalability**: Yeni özellikler kolayca eklenebilir
+- **Maintainability**: Kod bakımı ve güncelleme kolaylığı
+
+**📈 Performans Optimizasyonları:**
+- CUDA GPU desteği ile hızlandırılmış hesaplama
+- Frame skipping ile gereksiz işlem azaltma
+- Model caching ile tekrarlayan hesaplama önleme
+- Batch processing ile verimli veri işleme
 
 ---
 
@@ -141,11 +217,6 @@ EmotionMLP(
    src/
    ├── yolov11l-face.pt              # YOLO face detection model
    ├── models/
-   │   ├── emotion_classifier/       # Scikit-learn emotion models
-   │   │   ├── emotion_classifier_model.pkl
-   │   │   ├── emotion_classifier_scaler.pkl
-   │   │   ├── emotion_classifier_labelencoder.pkl
-   │   │   └── emotion_classifier_selector.pkl
    │   └── torch/                    # PyTorch emotion models
    │       ├── emotion_mlp.pth
    │       ├── emotion_scaler.pkl
@@ -389,10 +460,8 @@ brew install cmake
 
 | Sistem Konfigürasyonu  | FPS   | CPU Kullanımı | RAM Kullanımı | İşlem Süresi |
 | ---------------------- | ----- | ------------- | ------------- | ------------ |
-| RTX 4090 + i9-13900K   | 75+   | 25%           | 3.5GB         | <13ms        |
-| RTX 3080 + i7-10700K   | 60+   | 30%           | 2.8GB         | <16ms        |
-| GTX 1660 Ti + i5-9600K | 35+   | 45%           | 2.2GB         | <28ms        |
-| CPU Only (i7-10700K)   | 12-15 | 85%           | 4.2GB         | <66ms        |
+| RTX 4050 + i5-13420H   | 75+   | 25%           | 3.5GB         | <13ms        |
+| CPU Only (i5-13420H)   | 12-15 | 85%           | 4.2GB         | <66ms        |
 
 ### 🏗️ Proje Mimarisi
 
@@ -405,7 +474,6 @@ FaceStream Studio/
 ├── src/
 │   ├── yolov11l-face.pt    # YOLO face detection model
 │   └── models/
-│       ├── emotion_classifier/  # Scikit-learn models
 │       └── torch/              # PyTorch emotion MLP
 └── docs/                    # Documentation (optional)
 ```

@@ -1,0 +1,156 @@
+// FaceStream Studio - Proje Yapısı ve Bağımlılık Grafiği
+digraph FaceStreamStudio {
+    // Graf ayarları
+    rankdir=TB;
+    node [shape=box, style=filled, fontsize=10];
+    edge [fontsize=8];
+    
+    // Renk şeması
+    subgraph cluster_main {
+        label="FaceStream Studio - Ana Uygulama";
+        style=filled;
+        color=lightblue;
+        
+        // Ana uygulama dosyaları
+        app_py [label="app.py\n(Streamlit Ana Uygulama)", fillcolor=lightgreen];
+        analyzer_py [label="Analyzer.py\n(Yüz Analiz Motoru)", fillcolor=lightgreen];
+        languages_json [label="languages.json\n(Çoklu Dil Desteği)", fillcolor=lightyellow];
+        requirements_txt [label="requirements.txt\n(Bağımlılıklar)", fillcolor=lightyellow];
+        readme_md [label="README.md\n(Dokümantasyon)", fillcolor=lightyellow];
+        doxyfile [label="Doxyfile\n(Kod Dokümantasyonu)", fillcolor=lightyellow];
+        graf_dot [label="graf.dot\n(Bu Graf Dosyası)", fillcolor=lightyellow];
+        
+        // Ana uygulama bağlantıları
+        app_py -> analyzer_py [label="import"];
+        app_py -> languages_json [label="load"];
+    }
+    
+    subgraph cluster_models {
+        label="AI/ML Modelleri";
+        style=filled;
+        color=lightcoral;
+        
+        // Model dosyaları
+        yolo_face_v11 [label="yolov11l-face.pt\n(YOLO Yüz Tespiti v11)", fillcolor=orange];
+        yolo_face_v8 [label="yolov8n-face.pt\n(YOLO Yüz Tespiti v8)", fillcolor=orange];
+        emotion_mlp [label="emotion_mlp.pth\n(PyTorch Duygu Modeli)", fillcolor=orange];
+        emotion_scaler [label="emotion_scaler.pkl\n(Özellik Ölçeklendirici)", fillcolor=orange];
+        emotion_labelencoder [label="emotion_labelencoder.pkl\n(Etiket Kodlayıcı)", fillcolor=orange];
+        
+        // Model bağlantıları
+        analyzer_py -> yolo_face_v11 [label="loads"];
+        analyzer_py -> yolo_face_v8 [label="loads"];
+        analyzer_py -> emotion_mlp [label="loads"];
+        analyzer_py -> emotion_scaler [label="loads"];
+        analyzer_py -> emotion_labelencoder [label="loads"];
+    }
+    
+    subgraph cluster_libraries {
+        label="Harici Kütüphaneler";
+        style=filled;
+        color=lightsteelblue;
+        
+        // Python kütüphaneleri
+        streamlit [label="Streamlit\n(Web Arayüzü)", fillcolor=cyan];
+        opencv [label="OpenCV\n(Görüntü İşleme)", fillcolor=cyan];
+        ultralytics [label="Ultralytics\n(YOLO Framework)", fillcolor=cyan];
+        mediapipe [label="MediaPipe\n(Face Mesh)", fillcolor=cyan];
+        torch [label="PyTorch\n(Deep Learning)", fillcolor=cyan];
+        numpy [label="NumPy\n(Sayısal İşlemler)", fillcolor=cyan];
+        pandas [label="Pandas\n(Veri İşleme)", fillcolor=cyan];
+        face_recognition [label="face_recognition\n(Yüz Karşılaştırma)", fillcolor=cyan];
+        joblib [label="joblib\n(Model Serileştirme)", fillcolor=cyan];
+        pillow [label="Pillow\n(Resim İşleme)", fillcolor=cyan];
+        
+        // Kütüphane bağımlılıkları
+        app_py -> streamlit [label="uses"];
+        app_py -> opencv [label="uses"];
+        app_py -> pandas [label="uses"];
+        
+        analyzer_py -> opencv [label="uses"];
+        analyzer_py -> numpy [label="uses"];
+        analyzer_py -> torch [label="uses"];
+        analyzer_py -> ultralytics [label="uses"];
+        analyzer_py -> mediapipe [label="uses"];
+        analyzer_py -> face_recognition [label="uses"];
+        analyzer_py -> joblib [label="uses"];
+        analyzer_py -> pandas [label="uses"];
+    }
+    
+    subgraph cluster_classes {
+        label="Ana Sınıflar ve Bileşenler";
+        style=filled;
+        color=lightgray;
+        
+        // Sınıflar
+        FaceStreamStudioApp [label="FaceStreamStudioApp\n(Ana Uygulama Sınıfı)", fillcolor=lightpink];
+        FaceAnalyzer [label="FaceAnalyzer\n(Yüz Analiz Sınıfı)", fillcolor=lightpink];
+        EmotionMLP [label="EmotionMLP\n(Duygu Analizi Neural Network)", fillcolor=lightpink];
+        
+        // Sınıf bağlantıları
+        app_py -> FaceStreamStudioApp [label="defines"];
+        analyzer_py -> FaceAnalyzer [label="defines"];
+        analyzer_py -> EmotionMLP [label="defines"];
+        FaceStreamStudioApp -> FaceAnalyzer [label="uses"];
+        FaceAnalyzer -> EmotionMLP [label="uses"];
+    }
+    
+    subgraph cluster_features {
+        label="Ana Özellikler";
+        style=filled;
+        color=lightgreen;
+        
+        // Özellikler
+        face_detection [label="Yüz Tespiti\n(YOLO)", fillcolor=gold];
+        emotion_recognition [label="Duygu Tanıma\n(Custom MLP)", fillcolor=gold];
+        face_recognition_feat [label="Yüz Tanıma\n(face_recognition)", fillcolor=gold];
+        speech_tracking [label="Konuşma Takibi\n(MediaPipe)", fillcolor=gold];
+        realtime_analysis [label="Gerçek Zamanlı Analiz", fillcolor=gold];
+        multi_language [label="Çoklu Dil Desteği", fillcolor=gold];
+        data_export [label="Veri Dışa Aktarma", fillcolor=gold];
+        
+        // Özellik bağlantıları
+        FaceAnalyzer -> face_detection [label="implements"];
+        FaceAnalyzer -> emotion_recognition [label="implements"];
+        FaceAnalyzer -> face_recognition_feat [label="implements"];
+        FaceAnalyzer -> speech_tracking [label="implements"];
+        FaceStreamStudioApp -> realtime_analysis [label="implements"];
+        FaceStreamStudioApp -> multi_language [label="implements"];
+        FaceStreamStudioApp -> data_export [label="implements"];
+    }
+        
+    subgraph cluster_config {
+        label="Yapılandırma ve Ayarlar";
+        style=filled;
+        color=mistyrose;
+        
+        // Yapılandırma bileşenleri
+        model_settings [label="Model Ayarları\n(Threshold, Max Faces)", fillcolor=plum];
+        detection_settings [label="Tespit Ayarları\n(Frame Skip, Sensitivity)", fillcolor=plum];
+        display_settings [label="Görüntü Ayarları\n(Show Names, Times, Emotions)", fillcolor=plum];
+        ui_settings [label="UI Ayarları\n(Language, Theme)", fillcolor=plum];
+        
+        // Ayar bağlantıları
+        FaceStreamStudioApp -> model_settings [label="configures"];
+        FaceStreamStudioApp -> detection_settings [label="configures"];
+        FaceStreamStudioApp -> display_settings [label="configures"];
+        FaceStreamStudioApp -> ui_settings [label="configures"];
+    }
+    
+    // Performans optimizasyonları
+    subgraph cluster_optimization {
+        label="Performans Optimizasyonları";
+        style=filled;
+        color=honeydew;
+        
+        cuda_support [label="CUDA GPU Desteği", fillcolor=lightsteelblue];
+        frame_skipping [label="Frame Atlama", fillcolor=lightsteelblue];
+        batch_processing [label="Batch İşleme", fillcolor=lightsteelblue];
+        caching [label="Sonuç Önbellekleme", fillcolor=lightsteelblue];
+        
+        torch -> cuda_support [label="enables"];
+        FaceStreamStudioApp -> frame_skipping [label="implements"];
+        EmotionMLP -> batch_processing [label="supports"];
+        FaceAnalyzer -> caching [label="implements"];
+    }
+}
