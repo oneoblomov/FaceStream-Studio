@@ -14,7 +14,7 @@ Yapay zeka destekli yüz tanıma, duygu analizi ve konuşma süresi ölçümü i
 
 ### ✨ Yenilikler
 
-- 🧠 **Custom PyTorch MLP Model** ile gelişmiş duygu analizi
+- 🧠 **Özel PyTorch MLP Modeli** ile gelişmiş duygu analizi
 - ⚡ **CUDA GPU desteği** ile hızlandırılmış işlem
 - 🎯 **MediaPipe Face Mesh** ile hassas yüz landmark tespiti
 - 📊 **Gelişmiş konuşma analizi** ve süre takibi
@@ -26,12 +26,12 @@ Yapay zeka destekli yüz tanıma, duygu analizi ve konuşma süresi ölçümü i
 
 - [🏗️ Proje Mimarisi ve Graf](#️-proje-mimarisi-ve-graf)
 - [🚀 Özellikler](#-özellikler)
-- [🎯 Teknolojiler](#-teknolojiler)
+- [🎯 Kullanılan Teknolojiler](#-kullanılan-teknolojiler)
 - [📦 Kurulum](#-kurulum)
 - [🏃‍♂️ Hızlı Başlangıç](#️-hızlı-başlangıç)
 - [📖 Kullanım Kılavuzu](#-kullanım-kılavuzu)
 - [⚙️ Ayarlar ve Yapılandırma](#️-ayarlar-ve-yapılandırma)
-- [🧠 AI Modelleri](#-ai-modelleri)
+- [🧠 Yapay Zeka Modelleri](#-yapay-zeka-modelleri)
 - [🛠️ Sorun Giderme](#️-sorun-giderme)
 - [📈 Performans Optimizasyonu](#-performans-optimizasyonu)
 - [🤝 Katkıda Bulunma](#-katkıda-bulunma)
@@ -44,11 +44,12 @@ Yapay zeka destekli yüz tanıma, duygu analizi ve konuşma süresi ölçümü i
 
 FaceStream Studio projesi, modern AI/ML teknolojilerini kullanarak gerçek zamanlı yüz analizi yapan kapsamlı bir sistemdir. Aşağıdaki graf, projenin tüm bileşenlerini, bağımlılıklarını ve veri akışını detaylı olarak göstermektedir:
 
-![Proje Mimarisi Grafiği](graf.png)
+![Proje Mimarisi Grafiği](docs/graf.png)
 
 ### 📊 Graf Açıklaması
 
 **🎨 Renk Kodları:**
+
 - 🟢 **Yeşil**: Python dosyaları (app.py, Analyzer.py)
 - 🟠 **Turuncu**: AI/ML model dosyaları (.pt, .pth, .pkl)
 - 🟡 **Sarı**: Yapılandırma dosyaları (JSON, TXT, MD)
@@ -59,16 +60,19 @@ FaceStream Studio projesi, modern AI/ML teknolojilerini kullanarak gerçek zaman
 **🏗️ Ana Bileşenler:**
 
 1. **Ana Uygulama Katmanı**
+
    - `app.py`: Streamlit tabanlı web arayüzü
    - `Analyzer.py`: Yüz analizi ve AI işlemleri motoru
    - `languages.json`: Çoklu dil desteği konfigürasyonu
 
 2. **AI/ML Model Katmanı**
+
    - `yolov11l-face.pt`: YOLO v11 yüz tespit modeli
    - `emotion_mlp.pth`: Custom PyTorch duygu analizi modeli
    - `emotion_scaler.pkl` & `emotion_labelencoder.pkl`: Model ön işleme bileşenleri
 
 3. **Kütüphane Ekosistemi**
+
    - **Streamlit**: Web arayüzü framework'ü
    - **OpenCV**: Görüntü işleme ve video operasyonları
    - **PyTorch**: Deep learning model inference
@@ -92,7 +96,7 @@ graph TB
     D --> E[Duygu Analizi MLP]
     E --> F[Streamlit UI]
     F --> G[CSV Export]
-    
+
     H[Face Database] --> C
     I[Model Weights] --> E
     J[Language Config] --> F
@@ -101,6 +105,7 @@ graph TB
 ### ⚙️ Sistem Mimarisi
 
 **🔧 Modüler Tasarım:**
+
 - **Separation of Concerns**: Her modül belirli bir sorumluluğa odaklanır
 - **Loose Coupling**: Bileşenler arası gevşek bağlantı
 - **High Cohesion**: İlgili fonksiyonlar aynı modülde gruplandırılmış
@@ -108,6 +113,7 @@ graph TB
 - **Maintainability**: Kod bakımı ve güncelleme kolaylığı
 
 **📈 Performans Optimizasyonları:**
+
 - CUDA GPU desteği ile hızlandırılmış hesaplama
 - Frame skipping ile gereksiz işlem azaltma
 - Model caching ile tekrarlayan hesaplama önleme
@@ -121,52 +127,52 @@ graph TB
 
 - **🔴 Gerçek Zamanlı Analiz**: Canlı kamera görüntüsü üzerinden anlık yüz analizi
 - **🎞️ Video Dosya Analizi**: MP4, AVI, MOV formatlarında video dosya desteği
-- **👤 Gelişmiş Yüz Tanıma**: Face Recognition library ile yüksek doğruluk oranı
-- **😊 AI Duygu Analizi**: Custom PyTorch MLP model ile 7 farklı duygu tespiti
+- **👤 Gelişmiş Yüz Tanıma**: Face Recognition kütüphanesi ile yüksek doğruluk oranı
+- **😊 Yapay Zeka Duygu Analizi**: Özel PyTorch MLP model ile 7 farklı duygu tespiti
 - **🎙️ Akıllı Konuşma Tespiti**: MediaPipe Face Mesh ile dudak hareketlerinden konuşma analizi
 - **⏱️ Detaylı Konuşma Takibi**: Kişi bazında milisaniye hassasiyetinde konuşma süresi ölçümü
 
 ### 🛠️ Gelişmiş Özellikler
 
-- **⚡ GPU Acceleration**: CUDA desteği ile hızlandırılmış işlem gücü
+- **⚡ GPU Hızlandırma**: CUDA desteği ile hızlandırılmış işlem gücü
 - **🌐 Çoklu Dil Desteği**: Türkçe ve İngilizce arayüz (languages.json)
 - **📊 Veri Analizi**: CSV formatında detaylı sonuç kaydetme ve analiz
 - **🎨 Özelleştirilebilir Arayüz**: Streamlit tabanlı modern web arayüzü
-- **💾 Dinamik Yüz Veritabanı**: Runtime'da yeni yüzler ekleme ve yönetme
-- **🔧 Performans Optimizasyonu**: Frame skip, cache sistemi ve akıllı kaynak yönetimi
-- **📈 Real-time Metrics**: Anlık FPS, işlem süresi ve performans metrikleri
+- **💾 Dinamik Yüz Veritabanı**: Çalışma sırasında yeni yüzler ekleme ve yönetme
+- **🔧 Performans Optimizasyonu**: Frame skip, önbellek sistemi ve akıllı kaynak yönetimi
+- **📈 Anlık Metrikler**: Anlık FPS, işlem süresi ve performans metrikleri
 
 ---
 
-## 🎯 Teknolojiler
+## 🎯 Kullanılan Teknolojiler
 
-### 🧠 AI/ML Framework'leri
+### 🧠 Yapay Zeka/ML Framework'leri
 
-- **🎯 YOLO v11**: State-of-the-art yüz tespiti (yolov11l-face.pt)
+- **🎯 YOLO v11**: Son teknoloji yüz tespiti (yolov11l-face.pt)
 - **🔍 Face Recognition**: dlib tabanlı yüz encoding ve tanıma sistemi
 - **🧭 MediaPipe Face Mesh**: Google'ın 468 noktalı yüz landmark tespiti
-- **⚡ PyTorch**: Custom MLP modeli ile gelişmiş duygu analizi
-- **📊 Scikit-learn**: Feature scaling, selection ve preprocessing
+- **⚡ PyTorch**: Özel MLP modeli ile gelişmiş duygu analizi
+- **📊 Scikit-learn**: Özellik ölçekleme, seçme ve ön işleme
 
-### 🖥️ Core Technologies
+### 🖥️ Temel Teknolojiler
 
-- **🌐 Streamlit**: Modern, responsive web uygulaması framework'ü
+- **🌐 Streamlit**: Modern, duyarlı web uygulaması framework'ü
 - **👁️ OpenCV**: Bilgisayarlı görü ve görüntü işleme
 - **🔢 NumPy & Pandas**: Vektörel işlemler ve veri analizi
 - **🖼️ Pillow (PIL)**: Görüntü formatları ve işleme
-- **🔨 CMake**: C++ bağımlılıkları için build sistem
+- **🔨 CMake**: C++ bağımlılıkları için derleme sistemi
 
 ### ⚙️ Model Mimarisi
 
 ```python
-# Custom Emotion MLP Architecture
-EmotionMLP(
+# Özel Duygu MLP Mimarisi
+DuyguMLP(
   input_dim=936,      # MediaPipe landmarks
   hidden_layers=[2048, 1024, 512, 256, 128],
-  num_classes=7,      # 7 emotion categories
-  activation="SiLU",  # Swish activation
-  dropout=0.1-0.3,    # Regularization
-  batch_norm=True     # Stability
+  num_classes=7,      # 7 duygu kategorisi
+  activation="SiLU",  # Swish aktivasyonu
+  dropout=0.1-0.3,    # Düzenleme
+  batch_norm=True     # Stabilite
 )
 ```
 
@@ -245,7 +251,7 @@ Tarayıcınızda `http://localhost:8501` adresine giderek uygulamayı kullanmaya
 
 ### 🎮 İlk Kullanım Adımları
 
-1. **🌐 Dil Seçimi**: Sol sidebar'dan Türkçe/English seçin
+1. **🌐 Dil Seçimi**: Sol kenar çubuğundan Türkçe/English seçin
 2. **📷 Mod Seçimi**: Kamera veya Video analiz modunu belirleyin
 3. **⚙️ Model Ayarları**: Eşik değerleri ve performans parametrelerini düzenleyin
 4. **👤 Yüz Kaydetme**: Sağ panelden bilinen kişilerin yüzlerini ekleyin
@@ -283,7 +289,7 @@ Tarayıcınızda `http://localhost:8501` adresine giderek uygulamayı kullanmaya
 
 - **Dosya Yükleme**: MP4, AVI, MOV formatında video seçin
 - **Analiz Başlatma**: "🎬 Analiz Başlat" düğmesine tıklayın
-- **İlerleme Takibi**: Progress bar ile analiz durumunu izleyin
+- **İlerleme Takibi**: İlerleme çubuğu ile analiz durumunu izleyin
 - **Sonuç Görüntüleme**: Tamamlandığında detaylı sonuçlar görüntülenir
 
 ---
@@ -311,69 +317,69 @@ Tarayıcınızda `http://localhost:8501` adresine giderek uygulamayı kullanmaya
 - **✅ Duygu Analizini Göster**: Yüz ifadelerini gösterir
 - **✅ Sınırlayıcı Kutuları Göster**: Yüzlerin etrafında kutu çizer
 
-### 🌐 Dil ve UI Ayarları
+### 🌐 Dil ve Arayüz Ayarları
 
 - **Dil Seçimi**: Türkçe / English
-- **Tema**: Light / Dark (gelecek sürümlerde)
+- **Tema**: Açık / Koyu (gelecek sürümlerde)
 
 ---
 
-## 🧠 AI Modelleri
+## 🧠 Yapay Zeka Modelleri
 
 ### 👁️ Yüz Tespiti - YOLO v11
 
 ```python
 # Model Dosyası
-model_path = "src/yolov11l-face.pt"  # High accuracy face detection
+yolov11l_face_model_yolu = "src/yolov11l-face.pt"  # Yüksek doğruluklu yüz tespiti
 
 # Parametreler
-confidence_threshold = 0.5    # Detection confidence
-max_faces = 10               # Maximum faces per frame
-frame_skip = 2               # Process every N frames
+guven_esiği = 0.5    # Tespit güveni
+maksimum_yuz = 10    # Her karede maksimum yüz
+frame_atlatma = 2    # Her N karede bir işlem
 ```
 
-### 😊 Duygu Analizi - Custom PyTorch MLP
+### 😊 Duygu Analizi - Özel PyTorch MLP
 
 ```python
 # Tespit Edilen 7 Duygu
-EMOTIONS = [
-    "HAPPY",      # 😊 Mutlu
-    "SAD",        # 😢 Üzgün
-    "ANGRY",      # 😠 Kızgın
-    "SURPRISED",  # 😲 Şaşkın
-    "NEUTRAL",    # 😐 Nötr
-    "ANNOYED",    # 😤 Sinirli
-    "FEAR"        # 😨 Korkmuş
+DUYGULAR = [
+    "MUTLU",      # 😊 Mutlu
+    "ÜZGÜN",      # 😢 Üzgün
+    "KIZGIN",     # 😠 Kızgın
+    "ŞAŞKIN",     # 😲 Şaşkın
+    "NÖTR",       # 😐 Nötr
+    "SİNİRLİ",    # 😤 Sinirli
+    "KORKMUŞ"     # 😨 Korkmuş
 ]
 
-# Model Architecture
-class EmotionMLP(nn.Module):
+# Model Mimarisi
+class DuyguMLP(nn.Module):
     def __init__(self, input_dim=936, num_classes=7):
-        # 936 features from MediaPipe landmarks
-        # Deep neural network with residual connections
-        # SiLU activation + BatchNorm + Dropout
+        # 936 özellik MediaPipe landmarklarından
+        # Derin sinir ağı, residual bağlantılar
+        # SiLU aktivasyon + BatchNorm + Dropout
 ```
 
 ### 🎙️ Konuşma Tespiti - MediaPipe Face Mesh
 
 ```python
-# Kullanılan Landmark Points (468 total landmarks)
-UPPER_LIP = [13, 82, 81, 80, 78]     # Üst dudak noktaları
-LOWER_LIP = [14, 87, 86, 85, 84]     # Alt dudak noktaları
+# Kullanılan Landmark Noktaları (468 toplam landmark)
+UST_DUDAK = [13, 82, 81, 80, 78]     # Üst dudak noktaları
+ALT_DUDAK = [14, 87, 86, 85, 84]     # Alt dudak noktaları
 
 # Konuşma Algoritması
-def detect_speaking(landmarks):
-    lip_distance = calculate_lip_distance(landmarks)
-    speaking_threshold = 0.03  # Configurable
-    return lip_distance > speaking_threshold
+def konusma_algila(landmarks):
+    dudak_mesafesi = dudak_mesafesi_hesapla(landmarks)
+    konusma_esiği = 0.03  # Ayarlanabilir
+    return dudak_mesafesi > konusma_esiği
 ```
 
 ### 🔧 Model Performansı
 
 | Model          | Doğruluk | Hız (FPS) | GPU Bellek |
 | -------------- | -------- | --------- | ---------- |
-| YOLO v11 Face  | 95%+     | 30-60     | 2GB        |
-| Emotion MLP    | 87%      | 100+      | 1GB        |
+| YOLO v11 Yüz   | 95%+     | 30-60     | 2GB        |
+| Duygu MLP      | 87%      | 100+      | 1GB        |
 | MediaPipe Mesh | 99%      | 60+       | 0.5GB      |
 
 ---
@@ -385,7 +391,7 @@ def detect_speaking(landmarks):
 #### 🚫 Model Dosyaları Bulunamadı
 
 ```bash
-# Hata: src folder not found!
+# Hata: src klasörü bulunamadı!
 # Çözüm:
 mkdir src
 # Model dosyalarını src/ klasörüne ekleyin
@@ -396,7 +402,7 @@ mkdir src
 ```bash
 # Linux için kamera izinleri
 sudo usermod -a -G video $USER
-# Oturum kapatıp açın
+# Oturumu kapatıp açın
 ```
 
 #### 🐍 Bağımlılık Hataları
@@ -439,14 +445,14 @@ brew install cmake
 
    ```python
    # CUDA kurulu ise otomatik GPU kullanımı
-   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+   cihaz = torch.device("cuda" if torch.cuda.is_available() else "cpu")
    ```
 
 2. **Frame Skip Ayarı**
 
    ```python
    # Yüksek frame skip = Daha hızlı işlem
-   frame_skip = 3  # Her 3 frame'de bir analiz
+   frame_atlatma = 3  # Her 3 karede bir analiz
    ```
 
 3. **Model Seçimi**
@@ -458,71 +464,71 @@ brew install cmake
 
 ### 📊 Benchmark Sonuçları
 
-| Sistem Konfigürasyonu  | FPS   | CPU Kullanımı | RAM Kullanımı | İşlem Süresi |
-| ---------------------- | ----- | ------------- | ------------- | ------------ |
-| RTX 4050 + i5-13420H   | 75+   | 25%           | 3.5GB         | <13ms        |
-| CPU Only (i5-13420H)   | 12-15 | 85%           | 4.2GB         | <66ms        |
+| Sistem Konfigürasyonu | FPS   | CPU Kullanımı | RAM Kullanımı | İşlem Süresi |
+| --------------------- | ----- | ------------- | ------------- | ------------ |
+| RTX 4050 + i5-13420H  | 75+   | 25%           | 3.5GB         | <13ms        |
+| Sadece CPU (i5-13420H)| 12-15 | 85%           | 4.2GB         | <66ms        |
 
 ### 🏗️ Proje Mimarisi
 
 ```plaintext
 FaceStream Studio/
-├── app.py                    # Streamlit ana uygulama
-├── Analyzer.py              # FaceAnalyzer sınıfı (core engine)
-├── languages.json           # Çoklu dil desteği
-├── requirements.txt         # Python dependencies
+├── app.py                  # Streamlit ana uygulama
+├── Analyzer.py             # FaceAnalyzer sınıfı
+├── requirements.txt        # Python bağımlılıkları
 ├── src/
-│   ├── yolov11l-face.pt    # YOLO face detection model
+│   ├── yolov11l-face.pt    # YOLO yüz tespit modeli
+│   ├── languages.json      # Dil yapılandırma dosyası
 │   └── models/
-│       └── torch/              # PyTorch emotion MLP
-└── docs/                    # Documentation (optional)
+│       └── torch/              # PyTorch duygu MLP
+└── docs/                   # Dokümantasyon ve grafikler
 ```
 
 ### 🔄 İşlem Akışı
 
-1. **Video Input** → Camera/File
-2. **Frame Processing** → YOLO Face Detection
-3. **Face Recognition** → Encoding & Matching
-4. **Landmark Detection** → MediaPipe Face Mesh
-5. **Feature Extraction** → 936D vector from landmarks
-6. **Emotion Prediction** → PyTorch MLP inference
-7. **Speaking Detection** → Lip distance analysis
-8. **Results Aggregation** → Real-time statistics
-9. **UI Update** → Streamlit visualization
+1. **Video Girişi** → Kamera/Dosya
+2. **Kare İşleme** → YOLO Yüz Tespiti
+3. **Yüz Tanıma** → Encoding & Eşleştirme
+4. **Landmark Tespiti** → MediaPipe Face Mesh
+5. **Özellik Çıkarımı** → 936 boyutlu vektör
+6. **Duygu Tahmini** → PyTorch MLP çıkarımı
+7. **Konuşma Tespiti** → Dudak mesafesi analizi
+8. **Sonuç Toplama** → Anlık istatistikler
+9. **Arayüz Güncelleme** → Streamlit görselleştirme
 
-### 📦 Dependencies
+### 📦 Bağımlılıklar
 
 ```python
-# Core Dependencies (requirements.txt)
-streamlit           # Web UI framework
-opencv-python      # Computer vision
-ultralytics        # YOLO models
-mediapipe          # Face mesh detection
-numpy              # Numerical computing
-Pillow             # Image processing
-cmake              # C++ build system
+# Temel Bağımlılıklar (requirements.txt)
+streamlit           # Web arayüzü framework'ü
+opencv-python      # Bilgisayarlı görü
+ultralytics        # YOLO modelleri
+mediapipe          # Yüz mesh tespiti
+numpy              # Sayısal hesaplama
+Pillow             # Görüntü işleme
+cmake              # C++ derleme sistemi
 
-# Additional Python Packages (auto-installed)
-torch              # PyTorch deep learning
-torchvision        # Computer vision for PyTorch
-face-recognition   # Face encoding/recognition
-scikit-learn       # Traditional ML models
-pandas             # Data manipulation
-joblib             # Model serialization
+# Ek Python Paketleri (otomatik kurulum)
+torch              # PyTorch derin öğrenme
+torchvision        # PyTorch için bilgisayarlı görü
+face-recognition   # Yüz encoding/tanıma
+scikit-learn       # Geleneksel ML modelleri
+pandas             # Veri işleme
+joblib             # Model serileştirme
 ```
 
-### ⚠️ Bilinen Limitasyonlar
+### ⚠️ Bilinen Sınırlamalar
 
-- **İşlem Gücü**: Yüksek çözünürlük videolarda GPU gereksinimi
-- **Aydınlatma**: Düşük ışık koşullarında performans azalması
+- **İşlem Gücü**: Yüksek çözünürlükte GPU gereksinimi
+- **Aydınlatma**: Düşük ışıkta performans azalması
 - **Çoklu Yüz**: 10+ yüz durumunda FPS düşüşü
-- **Model Boyutu**: YOLO v11 modeli ~50MB boyutunda
+- **Model Boyutu**: YOLO v11 modeli ~50MB
 - **Platform**: Windows'ta CMake kurulumu karmaşık olabilir
 
 ### 🔧 Geliştirme Ortamı
 
 ```bash
-# Development kurulumu
+# Geliştirme kurulumu
 git clone https://github.com/kullanici/facestream-studio.git
 cd facestream-studio
 pip install -r requirements-dev.txt
@@ -535,25 +541,25 @@ pip install -r requirements-dev.txt
 ### 🔧 Geliştirme Ortamı Kurulumu
 
 ```bash
-# Repository'yi fork edin ve klonlayın
+# Depoyu fork edin ve klonlayın
 git clone https://github.com/YOUR_USERNAME/facestream-studio.git
 cd "FaceStream Studio"
 
-# Development dependencies yükleyin
+# Geliştirme bağımlılıklarını yükleyin
 pip install -r requirements.txt
 pip install pytest pytest-cov black flake8
 
-# Pre-commit hooks kurulumu (opsiyonel)
+# Pre-commit hook kurulumu (isteğe bağlı)
 pip install pre-commit
 pre-commit install
 ```
 
 ### 📝 Katkı Süreci
 
-1. **Fork** yapın ve **feature branch** oluşturun
+1. **Fork** yapın ve **özellik dalı** oluşturun
 
    ```bash
-   git checkout -b feature/amazing-new-feature
+   git checkout -b ozellik/harika-yeni-ozellik
    ```
 
 2. **Kod yazın** ve **test edin**
@@ -567,8 +573,8 @@ pre-commit install
 3. **Commit** edin ve **push** yapın
 
    ```bash
-   git commit -m "feat: add amazing new feature"
-   git push origin feature/amazing-new-feature
+   git commit -m "feat: harika yeni özellik eklendi"
+   git push origin ozellik/harika-yeni-ozellik
    ```
 
 4. **Pull Request** oluşturun
@@ -586,16 +592,16 @@ def test_face_analyzer_init():
     assert analyzer.model is not None
 
 def test_emotion_detection():
-    # Test emotion classification
+    # Duygu sınıflandırma testi
     pass
 ```
 
 ### 📋 Katkı Kuralları
 
-- **Code Style**: Black formatter kullanın
-- **Documentation**: Yeni fonksiyonlar için docstring ekleyin
-- **Testing**: Yeni özellikler için test yazın
-- **Commit Messages**: [Conventional Commits](https://conventionalcommits.org/) formatını kullanın
+- **Kod Stili**: Black formatter kullanın
+- **Dokümantasyon**: Yeni fonksiyonlar için docstring ekleyin
+- **Test**: Yeni özellikler için test yazın
+- **Commit Mesajları**: [Conventional Commits](https://conventionalcommits.org/) formatını kullanın
 
 ---
 
@@ -603,45 +609,45 @@ def test_emotion_detection():
 
 ### 🛠️ VS Code Görevleri
 
-Bu proje VS Code task'ları ile gelir:
+Bu proje VS Code görevleri ile gelir:
 
 ```bash
 # Streamlit uygulamasını çalıştır
 Ctrl+Shift+P → "Tasks: Run Task" → "Run Streamlit App"
 ```
 
-### 🐛 Debug Modu
+### 🐛 Hata Ayıklama Modu
 
 ```python
-# app.py içinde debug modu
+# app.py içinde hata ayıklama modu
 DEBUG_MODE = True  # Ek loglar ve metrikler için
 
 # Analyzer.py içinde
 if DEBUG_MODE:
-    print(f"Frame processing time: {processing_time:.2f}ms")
-    print(f"Detected faces: {len(faces)}")
+    print(f"Kare işleme süresi: {processing_time:.2f}ms")
+    print(f"Tespit edilen yüzler: {len(faces)}")
 ```
 
 ### 🔍 Profiling
 
 ```bash
-# Memory profiling
+# Bellek profili
 pip install memory-profiler
 python -m memory_profiler app.py
 
-# Performance profiling
+# Performans profili
 pip install line-profiler
 kernprof -l -v app.py
 ```
 
 ### 📝 Katkı Süreci (Detaylı)
 
-1. **Repository'yi Fork Edin**
+1. **Depoyu Fork Edin**
 
    - GitHub üzerinden projeyi fork edin
    - Kendi hesabınıza kopyalayın
 
-2. **Local Kurulum**
+2. **Yerel Kurulum**
 
    ```bash
    git clone https://github.com/YOUR_USERNAME/facestream-studio.git
@@ -649,10 +655,10 @@ kernprof -l -v app.py
    git remote add upstream https://github.com/ORIGINAL_OWNER/facestream-studio.git
    ```
 
-3. **Feature Branch Oluşturun**
+3. **Özellik Dalı Oluşturun**
 
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b ozellik/ozellik-adi
    ```
 
 4. **Kod Geliştirin ve Test Edin**
@@ -662,7 +668,7 @@ kernprof -l -v app.py
    # Testleri çalıştırın
    python -m pytest tests/ -v
 
-   # Code quality check
+   # Kod kalitesi kontrolü
    black . --check
    flake8 .
    ```
@@ -671,24 +677,24 @@ kernprof -l -v app.py
 
    ```bash
    git add .
-   git commit -m "feat: add your amazing feature"
-   git push origin feature/your-feature-name
+   git commit -m "feat: harika özelliğiniz eklendi"
+   git push origin ozellik/ozellik-adi
    ```
 
 6. **Pull Request Oluşturun**
    - GitHub'da Pull Request açın
    - Detaylı açıklama yazın
-   - Review bekleyin
+   - İnceleme bekleyin
 
-### 🔧 Gelişme Roadmap
+### 🔧 Gelişim Yol Haritası
 
-- [ ] **Real-time Dashboard**: Live metrics ve performance monitoring
-- [ ] **Batch Processing**: Çoklu video dosyalarını toplu işleme
-- [ ] **API Endpoint**: REST API ile entegrasyon desteği
-- [ ] **Cloud Integration**: AWS/Azure cloud deployment
-- [ ] **Mobile App**: React Native ile mobil uygulama
-- [ ] **Advanced Analytics**: Detaylı istatistik ve raporlama
-- [ ] **Multi-language Models**: Farklı etnik köken için optimize modeller
+- [ ] **Gerçek Zamanlı Gösterge Paneli**: Canlı metrikler ve performans izleme
+- [ ] **Toplu İşleme**: Çoklu video dosyalarını toplu işleme
+- [ ] **API Uç Noktası**: REST API ile entegrasyon desteği
+- [ ] **Bulut Entegrasyonu**: AWS/Azure bulut dağıtımı
+- [ ] **Mobil Uygulama**: React Native ile mobil uygulama
+- [ ] **Gelişmiş Analitik**: Detaylı istatistik ve raporlama
+- [ ] **Çok Dilli Modeller**: Farklı etnik kökenler için optimize modeller
 
 ---
 
@@ -697,13 +703,13 @@ kernprof -l -v app.py
 ### 📧 İletişim
 
 - **📧 E-posta**: [muhakaplan@hotmail.com](mailto:muhakaplan@hotmail.com)
-- **🔗 GitHub**: Bu repository'deki Issues bölümü
-- **💼 LinkedIn**: [Profil bağlantısı]
+- **🔗 GitHub**: [github.com/oneoblomov](https://github.com/oneoblomov)
+- **💼 LinkedIn**:  [m-kaplan](https://www.linkedin.com/in/m-kaplan-b6b947270/)
 
 ### 🆘 Destek
 
-- 🐛 **Bug Reports**: GitHub Issues kullanarak hata bildirimi
-- 💡 **Feature Requests**: Yeni özellik önerileri için Discussions
+- 🐛 **Hata Bildirimi**: GitHub Issues kullanarak hata bildirimi
+- 💡 **Özellik Önerisi**: Yeni özellik önerileri için Discussions
 - 📖 **Dokümantasyon**: README ve kod içi yorumlar
 - 💬 **Teknik Sorular**: Issues bölümünde Q&A etiketi ile
 
@@ -711,8 +717,8 @@ kernprof -l -v app.py
 
 - ✅ **Temel Özellikler**: Tamamlandı ve test edildi
 - 🔄 **Optimizasyon**: Devam eden geliştirmeler
-- 📈 **Performans**: GPU acceleration ve caching
-- 🌍 **Internationalization**: Çoklu dil desteği aktif
+- 📈 **Performans**: GPU hızlandırma ve önbellekleme
+- 🌍 **Çoklu Dil Desteği**: Aktif
 
 ---
 

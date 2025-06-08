@@ -17,7 +17,7 @@ class FaceStreamStudioApp:
 
     def load_languages(self):
         try:
-            with open("languages.json", "r", encoding="utf-8") as f:
+            with open("src/languages.json", "r", encoding="utf-8") as f:
                 langs = json.load(f)
                 if not isinstance(langs, dict):
                     raise ValueError("languages.json format is invalid.")
