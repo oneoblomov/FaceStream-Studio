@@ -106,7 +106,20 @@ class FaceAnalyzer:
             torch_le_path = os.path.join(model_dir, "src", "models", "torch", "emotion_labelencoder.pkl")
             if all(os.path.exists(p) for p in [torch_model_path, torch_scaler_path, torch_le_path]):
                 self.torch_model = EmotionMLP(input_dim=936, num_classes=7).to(self.device)
-                self.torch_model.load_state_dict(torch.load(torch_model_path, map_location=self.device))
+                # Safe torch.load: use weights_only if available (PyTorch >=2.0), else check type
+                try:
+                    import inspect
+                    torch_load_args = inspect.getfullargspec(torch.load).args
+                    if 'weights_only' in torch_load_args:
+                        state_dict = torch.load(torch_model_path, map_location=self.device, weights_only=True)
+                    else:
+                        state_dict = torch.load(torch_model_path, map_location=self.device)
+                        if not isinstance(state_dict, dict):
+                            raise RuntimeError("Loaded object is not a state_dict dictionary!")
+                    self.torch_model.load_state_dict(state_dict)
+                except Exception as e:
+                    print(f"Safe torch.load failed: {e}")
+                    return
                 self.torch_model.eval()
                 self.torch_scaler = joblib.load(torch_scaler_path)
                 self.torch_le = joblib.load(torch_le_path)
